@@ -6,4 +6,6 @@ class AppRoutes {
   static const String resetPassword = '/reset-password';
 
   static const String eventDetails = '/event-details';
+
+  static const String publicRsvp = '/rsvp';
 }

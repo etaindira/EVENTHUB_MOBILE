@@ -46,6 +46,11 @@ class InvitationProvider extends ChangeNotifier {
     required String fontStyle,
     dynamic templateData,
     String status = 'draft',
+
+    // NEW RSVP SETTINGS
+    bool allowPlusOne = false,
+    String rsvpFormTitle = 'RSVP Confirmation',
+    String rsvpFormMessage = 'Please confirm whether you will attend.',
   }) async {
     try {
       _isLoading = true;
@@ -62,6 +67,9 @@ class InvitationProvider extends ChangeNotifier {
         fontStyle: fontStyle,
         templateData: templateData,
         status: status,
+        allowPlusOne: allowPlusOne,
+        rsvpFormTitle: rsvpFormTitle,
+        rsvpFormMessage: rsvpFormMessage,
       );
 
       _invitations.insert(0, invitation);
@@ -89,6 +97,11 @@ class InvitationProvider extends ChangeNotifier {
     required String fontStyle,
     dynamic templateData,
     String status = 'draft',
+
+    // NEW RSVP SETTINGS
+    bool allowPlusOne = false,
+    String rsvpFormTitle = 'RSVP Confirmation',
+    String rsvpFormMessage = 'Please confirm whether you will attend.',
   }) async {
     try {
       _isLoading = true;
@@ -105,6 +118,9 @@ class InvitationProvider extends ChangeNotifier {
         fontStyle: fontStyle,
         templateData: templateData,
         status: status,
+        allowPlusOne: allowPlusOne,
+        rsvpFormTitle: rsvpFormTitle,
+        rsvpFormMessage: rsvpFormMessage,
       );
 
       final index = _invitations.indexWhere(

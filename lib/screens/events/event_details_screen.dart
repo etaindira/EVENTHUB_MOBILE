@@ -188,48 +188,57 @@ class _EventDetailsTabState extends State<EventDetailsTab> {
 
           const SizedBox(height: 16),
 
-          SizedBox(
-            width: double.infinity,
-            height: 52,
-            child: ElevatedButton.icon(
-              onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (_) {
-                    return AlertDialog(
-                      title: const Text('Payment Required'),
-                      content: const Text(
-                        'Please make payment first. After payment confirmation, you will be able to share invitations to your guest list.',
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: const Text('OK'),
-                        ),
-                      ],
-                    );
-                  },
-                );
-              },
-              icon: const Icon(Icons.lock_outline, color: Colors.white),
-              label: const Text(
-                'Share Invitation to Guest List',
-                style: TextStyle(color: Colors.white),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.grey,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
+          Consumer<InvitationProvider>(
+            builder: (context, invitationProvider, _) {
+              final invitation = invitationProvider.latestInvitation;
+
+              return SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: ElevatedButton.icon(
+                  onPressed: invitation == null
+                      ? null
+                      : () async {
+                          final success = await invitationProvider
+                              .sendInvitationToGuests(
+                                eventId: event.id,
+                                invitationId: invitation.id,
+                              );
+
+                          if (!mounted) return;
+
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                success
+                                    ? 'Invitations sent successfully'
+                                    : invitationProvider.errorMessage ??
+                                          'Failed to send invitations',
+                              ),
+                            ),
+                          );
+                        },
+                  icon: const Icon(Icons.send, color: Colors.white),
+                  label: const Text(
+                    'Share Invitation to Guest List',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryBlue,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
                 ),
-              ),
-            ),
+              );
+            },
           ),
 
           const SizedBox(height: 8),
 
           const Center(
             child: Text(
-              'MAKE PAYMENT TO SHARE INVITATION',
+              'PAYMENT BYPASSED FOR TESTING',
               style: TextStyle(
                 color: AppColors.textGrey,
                 fontSize: 13,

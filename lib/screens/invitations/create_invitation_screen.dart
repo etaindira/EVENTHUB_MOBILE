@@ -30,10 +30,15 @@ class _CreateInvitationScreenState extends State<CreateInvitationScreen> {
   final venueController = TextEditingController();
   final venueAddressController = TextEditingController();
 
+  final rsvpFormTitleController = TextEditingController();
+  final rsvpFormMessageController = TextEditingController();
+
   String selectedInvitationTemplate = 'Elegant Classic';
   String selectedTheme = 'Elegant';
   String selectedColorPalette = 'Blue and white';
   String selectedFontStyle = 'Modern';
+
+  bool allowPlusOne = false;
 
   final List<String> invitationTemplateOptions = [
     'Elegant Classic',
@@ -89,6 +94,13 @@ class _CreateInvitationScreenState extends State<CreateInvitationScreen> {
       selectedTheme = invitation.theme ?? selectedTheme;
       selectedColorPalette = invitation.colorPalette ?? selectedColorPalette;
       selectedFontStyle = invitation.fontStyle ?? selectedFontStyle;
+
+      allowPlusOne = invitation.allowPlusOne ?? false;
+      rsvpFormTitleController.text =
+          invitation.rsvpFormTitle ?? 'RSVP Confirmation';
+      rsvpFormMessageController.text =
+          invitation.rsvpFormMessage ??
+          'Please confirm whether you will attend.';
     } else {
       titleController.text = "You're Invited to ${widget.event.title}";
       messageController.text = widget.event.description;
@@ -97,6 +109,11 @@ class _CreateInvitationScreenState extends State<CreateInvitationScreen> {
       selectedTheme = 'Elegant';
       selectedColorPalette = 'Blue and white';
       selectedFontStyle = 'Modern';
+
+      allowPlusOne = false;
+      rsvpFormTitleController.text = 'RSVP Confirmation';
+      rsvpFormMessageController.text =
+          'Please confirm whether you will attend.';
     }
 
     titleController.addListener(refreshPreview);
@@ -119,6 +136,9 @@ class _CreateInvitationScreenState extends State<CreateInvitationScreen> {
     dateTimeController.dispose();
     venueController.dispose();
     venueAddressController.dispose();
+    rsvpFormTitleController.dispose();
+    rsvpFormMessageController.dispose();
+
     super.dispose();
   }
 
@@ -135,6 +155,9 @@ class _CreateInvitationScreenState extends State<CreateInvitationScreen> {
       'theme': selectedTheme,
       'colorPalette': selectedColorPalette,
       'fontStyle': selectedFontStyle,
+      'allowPlusOne': allowPlusOne,
+      'rsvpFormTitle': rsvpFormTitleController.text.trim(),
+      'rsvpFormMessage': rsvpFormMessageController.text.trim(),
     };
   }
 
@@ -165,6 +188,9 @@ class _CreateInvitationScreenState extends State<CreateInvitationScreen> {
         fontStyle: selectedFontStyle,
         templateData: buildTemplateData(),
         status: 'draft',
+        allowPlusOne: allowPlusOne,
+        rsvpFormTitle: rsvpFormTitleController.text.trim(),
+        rsvpFormMessage: rsvpFormMessageController.text.trim(),
       );
     } else {
       success = await invitationProvider.saveInvitation(
@@ -177,6 +203,9 @@ class _CreateInvitationScreenState extends State<CreateInvitationScreen> {
         fontStyle: selectedFontStyle,
         templateData: buildTemplateData(),
         status: 'draft',
+        allowPlusOne: allowPlusOne,
+        rsvpFormTitle: rsvpFormTitleController.text.trim(),
+        rsvpFormMessage: rsvpFormMessageController.text.trim(),
       );
     }
 
@@ -270,6 +299,99 @@ class _CreateInvitationScreenState extends State<CreateInvitationScreen> {
           borderRadius: BorderRadius.circular(14),
           borderSide: const BorderSide(color: AppColors.lightBlue),
         ),
+      ),
+    );
+  }
+
+  Widget rsvpSettingsCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.borderGrey),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'RSVP Settings',
+            style: TextStyle(
+              color: AppColors.textWhite,
+              fontSize: 19,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'Customize the RSVP form guests will see after opening their invitation link.',
+            style: TextStyle(color: AppColors.textGrey),
+          ),
+          const SizedBox(height: 16),
+          SwitchListTile(
+            value: allowPlusOne,
+            activeColor: AppColors.primaryBlue,
+            contentPadding: EdgeInsets.zero,
+            title: const Text(
+              'Allow guests to bring a plus one',
+              style: TextStyle(
+                color: AppColors.textWhite,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            subtitle: const Text(
+              'Guests will see a checkbox if they RSVP Yes.',
+              style: TextStyle(color: AppColors.textGrey),
+            ),
+            onChanged: (value) {
+              setState(() {
+                allowPlusOne = value;
+              });
+            },
+          ),
+          const SizedBox(height: 14),
+          AuthTextField(
+            controller: rsvpFormTitleController,
+            label: 'RSVP Form Title',
+            icon: Icons.assignment_outlined,
+            validator: (value) => value == null || value.isEmpty
+                ? 'RSVP form title is required'
+                : null,
+          ),
+          const SizedBox(height: 14),
+          TextFormField(
+            controller: rsvpFormMessageController,
+            maxLines: 3,
+            minLines: 2,
+            style: const TextStyle(color: AppColors.textWhite),
+            validator: (value) => value == null || value.isEmpty
+                ? 'RSVP form message is required'
+                : null,
+            decoration: InputDecoration(
+              labelText: 'RSVP Form Message',
+              labelStyle: const TextStyle(color: AppColors.textGrey),
+              prefixIcon: const Icon(
+                Icons.message_outlined,
+                color: AppColors.textGrey,
+              ),
+              filled: true,
+              fillColor: AppColors.inputFill,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: const BorderSide(color: AppColors.borderGrey),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: const BorderSide(color: AppColors.borderGrey),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: const BorderSide(color: AppColors.lightBlue),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -483,6 +605,8 @@ class _CreateInvitationScreenState extends State<CreateInvitationScreen> {
                     });
                   },
                 ),
+                const SizedBox(height: 18),
+                rsvpSettingsCard(),
                 const SizedBox(height: 24),
                 const Align(
                   alignment: Alignment.centerLeft,

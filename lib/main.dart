@@ -15,6 +15,9 @@ import 'providers/event_provider.dart';
 import 'providers/guest_provider.dart';
 import 'providers/invitation_provider.dart';
 import 'providers/payment_provider.dart';
+import 'providers/dashboard_provider.dart';
+import 'providers/public_rsvp_provider.dart';
+import 'screens/rsvp/public_rsvp_screen.dart';
 
 void main() {
   runApp(const EventHubApp());
@@ -35,6 +38,8 @@ class EventHubApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => InvitationProvider()),
         ChangeNotifierProvider(create: (_) => PaymentProvider()),
         ChangeNotifierProvider(create: (_) => ProfileProvider()),
+        ChangeNotifierProvider(create: (_) => DashboardProvider()),
+        ChangeNotifierProvider(create: (_) => PublicRsvpProvider()),
       ],
       child: MaterialApp(
         title: 'EventHub',
@@ -46,6 +51,19 @@ class EventHubApp extends StatelessWidget {
           AppRoutes.verifyCode: (context) => const VerificationScreen(),
           AppRoutes.forgotPassword: (context) => const ForgotPasswordScreen(),
           AppRoutes.resetPassword: (context) => const ResetPasswordScreen(),
+        },
+        onGenerateRoute: (settings) {
+          final uri = Uri.parse(settings.name ?? '');
+
+          if (uri.pathSegments.length == 2 && uri.pathSegments[0] == 'rsvp') {
+            final token = uri.pathSegments[1];
+
+            return MaterialPageRoute(
+              builder: (_) => PublicRsvpScreen(token: token),
+            );
+          }
+
+          return null;
         },
       ),
     );

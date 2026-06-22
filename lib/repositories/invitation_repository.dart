@@ -22,6 +22,9 @@ class InvitationRepository {
     required String fontStyle,
     dynamic templateData,
     String status = 'draft',
+    bool allowPlusOne = false,
+    String rsvpFormTitle = 'RSVP Confirmation',
+    String rsvpFormMessage = 'Please confirm whether you will attend.',
   }) async {
     final data = await _invitationService.saveInvitation(
       eventId: eventId,
@@ -33,6 +36,9 @@ class InvitationRepository {
       fontStyle: fontStyle,
       templateData: templateData,
       status: status,
+      allowPlusOne: allowPlusOne,
+      rsvpFormTitle: rsvpFormTitle,
+      rsvpFormMessage: rsvpFormMessage,
     );
 
     return InvitationModel.fromJson(data);
@@ -48,6 +54,9 @@ class InvitationRepository {
     required String fontStyle,
     dynamic templateData,
     String status = 'draft',
+    bool allowPlusOne = false,
+    String rsvpFormTitle = 'RSVP Confirmation',
+    String rsvpFormMessage = 'Please confirm whether you will attend.',
   }) async {
     final data = await _invitationService.updateInvitation(
       invitationId: invitationId,
@@ -59,6 +68,9 @@ class InvitationRepository {
       fontStyle: fontStyle,
       templateData: templateData,
       status: status,
+      allowPlusOne: allowPlusOne,
+      rsvpFormTitle: rsvpFormTitle,
+      rsvpFormMessage: rsvpFormMessage,
     );
 
     return InvitationModel.fromJson(data);

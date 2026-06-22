@@ -20,6 +20,9 @@ class InvitationService {
     required String fontStyle,
     dynamic templateData,
     String status = 'draft',
+    bool allowPlusOne = false,
+    String rsvpFormTitle = 'RSVP Confirmation',
+    String rsvpFormMessage = 'Please confirm whether you will attend.',
   }) async {
     try {
       final response = await _dio.post(
@@ -33,6 +36,9 @@ class InvitationService {
           'font_style': fontStyle,
           'template_data': templateData ?? {},
           'status': status,
+          'allow_plus_one': allowPlusOne,
+          'rsvp_form_title': rsvpFormTitle,
+          'rsvp_form_message': rsvpFormMessage,
         },
       );
 
@@ -57,6 +63,9 @@ class InvitationService {
     required String fontStyle,
     dynamic templateData,
     String status = 'draft',
+    bool allowPlusOne = false,
+    String rsvpFormTitle = 'RSVP Confirmation',
+    String rsvpFormMessage = 'Please confirm whether you will attend.',
   }) async {
     try {
       final response = await _dio.put(
@@ -70,6 +79,9 @@ class InvitationService {
           'font_style': fontStyle,
           'template_data': templateData ?? {},
           'status': status,
+          'allow_plus_one': allowPlusOne,
+          'rsvp_form_title': rsvpFormTitle,
+          'rsvp_form_message': rsvpFormMessage,
         },
       );
 
