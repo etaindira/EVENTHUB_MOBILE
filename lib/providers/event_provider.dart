@@ -79,4 +79,80 @@ class EventProvider extends ChangeNotifier {
       return false;
     }
   }
+
+  Future<bool> updateEvent({
+    required int eventId,
+    File? imageFile,
+    required String title,
+    required String description,
+    required String eventType,
+    required String startTime,
+    String? endTime,
+    required String venueName,
+    required String venueAddress,
+    int? capacity,
+    required String rsvpDeadline,
+    String? dressCode,
+  }) async {
+    try {
+      _isLoading = true;
+      _errorMessage = null;
+      notifyListeners();
+
+      final updatedEvent = await _eventRepository.updateEvent(
+        eventId: eventId,
+        imageFile: imageFile,
+        title: title,
+        description: description,
+        eventType: eventType,
+        startTime: startTime,
+        endTime: endTime,
+        venueName: venueName,
+        venueAddress: venueAddress,
+        capacity: capacity,
+        rsvpDeadline: rsvpDeadline,
+        dressCode: dressCode,
+      );
+
+      final index = _events.indexWhere((event) => event.id == eventId);
+
+      if (index != -1) {
+        _events[index] = updatedEvent;
+      }
+
+      _isLoading = false;
+      notifyListeners();
+
+      return true;
+    } catch (error) {
+      _isLoading = false;
+      _errorMessage = error.toString();
+      notifyListeners();
+
+      return false;
+    }
+  }
+
+  Future<bool> deleteEvent(int eventId) async {
+    try {
+      _isLoading = true;
+      _errorMessage = null;
+      notifyListeners();
+
+      await _eventRepository.deleteEvent(eventId);
+
+      _events.removeWhere((event) => event.id == eventId);
+
+      _isLoading = false;
+      notifyListeners();
+
+      return true;
+    } catch (error) {
+      _isLoading = false;
+      _errorMessage = error.toString();
+      notifyListeners();
+
+      return false;
+    }
+  }
 }

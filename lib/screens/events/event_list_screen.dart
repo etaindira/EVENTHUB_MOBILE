@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/constants/app_colors.dart';
-import '../../core/constants/app_routes.dart';
 import '../../models/event_model.dart';
 import '../../providers/event_provider.dart';
+import 'create_event_screen.dart';
 import 'event_details_screen.dart';
 
 class EventListScreen extends StatefulWidget {
@@ -22,6 +22,63 @@ class _EventListScreenState extends State<EventListScreen> {
     Future.microtask(() {
       Provider.of<EventProvider>(context, listen: false).fetchEvents();
     });
+  }
+
+  Future<void> _confirmDelete(EventModel event) async {
+    final eventProvider = Provider.of<EventProvider>(context, listen: false);
+
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: AppColors.surface,
+          title: const Text(
+            'Delete Event',
+            style: TextStyle(color: AppColors.textWhite),
+          ),
+          content: Text(
+            'Are you sure you want to delete "${event.title}"?',
+            style: const TextStyle(color: AppColors.textGrey),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text(
+                'Delete',
+                style: TextStyle(color: Colors.redAccent),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldDelete != true) return;
+
+    final success = await eventProvider.deleteEvent(event.id);
+
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          success
+              ? 'Event deleted successfully'
+              : eventProvider.errorMessage ?? 'Failed to delete event',
+        ),
+      ),
+    );
+  }
+
+  void _goToEditEvent(EventModel event) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => CreateEventScreen(eventToEdit: event)),
+    );
   }
 
   @override
@@ -44,14 +101,11 @@ class _EventListScreenState extends State<EventListScreen> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-
               const SizedBox(height: 6),
-
               const Text(
                 'Tap an event to view details, create guest lists and invitation cards.',
                 style: TextStyle(color: AppColors.textGrey),
               ),
-
               const SizedBox(height: 20),
 
               if (eventProvider.isLoading)
@@ -77,7 +131,11 @@ class _EventListScreenState extends State<EventListScreen> {
                       itemBuilder: (context, index) {
                         final event = eventProvider.events[index];
 
-                        return EventCard(event: event);
+                        return EventCard(
+                          event: event,
+                          onEdit: () => _goToEditEvent(event),
+                          onDelete: () => _confirmDelete(event),
+                        );
                       },
                     ),
                   ),
@@ -92,8 +150,15 @@ class _EventListScreenState extends State<EventListScreen> {
 
 class EventCard extends StatelessWidget {
   final EventModel event;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
 
-  const EventCard({super.key, required this.event});
+  const EventCard({
+    super.key,
+    required this.event,
+    required this.onEdit,
+    required this.onDelete,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -123,7 +188,6 @@ class EventCard extends StatelessWidget {
               ),
               child: const Icon(Icons.event, color: AppColors.lightBlue),
             ),
-
             const SizedBox(width: 14),
 
             Expanded(
@@ -138,16 +202,12 @@ class EventCard extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-
                   const SizedBox(height: 4),
-
                   Text(
                     event.eventType,
                     style: const TextStyle(color: AppColors.textGrey),
                   ),
-
                   const SizedBox(height: 4),
-
                   Text(
                     event.venueName,
                     style: const TextStyle(color: AppColors.textGrey),
@@ -156,7 +216,42 @@ class EventCard extends StatelessWidget {
               ),
             ),
 
-            const Icon(Icons.chevron_right, color: AppColors.textGrey),
+            PopupMenuButton<String>(
+              color: AppColors.surface,
+              icon: const Icon(Icons.more_vert, color: AppColors.textGrey),
+              onSelected: (value) {
+                if (value == 'edit') {
+                  onEdit();
+                } else if (value == 'delete') {
+                  onDelete();
+                }
+              },
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'edit',
+                  child: Row(
+                    children: [
+                      Icon(Icons.edit, color: AppColors.lightBlue),
+                      SizedBox(width: 10),
+                      Text(
+                        'Edit',
+                        style: TextStyle(color: AppColors.textWhite),
+                      ),
+                    ],
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'delete',
+                  child: Row(
+                    children: [
+                      Icon(Icons.delete_outline, color: Colors.redAccent),
+                      SizedBox(width: 10),
+                      Text('Delete', style: TextStyle(color: Colors.redAccent)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),

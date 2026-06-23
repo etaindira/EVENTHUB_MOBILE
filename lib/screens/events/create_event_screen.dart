@@ -5,11 +5,14 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../../models/event_model.dart';
 import '../../providers/event_provider.dart';
 import '../../widgets/auth_text_field.dart';
 
 class CreateEventScreen extends StatefulWidget {
-  const CreateEventScreen({super.key});
+  final EventModel? eventToEdit;
+
+  const CreateEventScreen({super.key, this.eventToEdit});
 
   @override
   State<CreateEventScreen> createState() => _CreateEventScreenState();
@@ -30,6 +33,31 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   DateTime? startDateTime;
   DateTime? endDateTime;
   DateTime? rsvpDeadline;
+
+  bool get isEditMode => widget.eventToEdit != null;
+
+  @override
+  void initState() {
+    super.initState();
+
+    if (isEditMode) {
+      final event = widget.eventToEdit!;
+
+      titleController.text = event.title;
+      descriptionController.text = event.description;
+      eventTypeController.text = event.eventType;
+      venueNameController.text = event.venueName;
+      venueAddressController.text = event.venueAddress;
+      capacityController.text = event.capacity?.toString() ?? '';
+      dressCodeController.text = event.dressCode ?? '';
+
+      startDateTime = DateTime.tryParse(event.startTime);
+      endDateTime = event.endTime == null
+          ? null
+          : DateTime.tryParse(event.endTime!);
+      rsvpDeadline = DateTime.tryParse(event.rsvpDeadline);
+    }
+  }
 
   @override
   void dispose() {
@@ -61,7 +89,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   Future<DateTime?> pickDateTime() async {
     final date = await showDatePicker(
       context: context,
-      firstDate: DateTime.now(),
+      firstDate: DateTime(2020),
       lastDate: DateTime(2035),
       initialDate: DateTime.now(),
     );
@@ -87,7 +115,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
         '${value.hour.toString().padLeft(2, '0')}:${value.minute.toString().padLeft(2, '0')}';
   }
 
-  Future<void> handleCreateEvent() async {
+  Future<void> handleSubmitEvent() async {
     if (!formKey.currentState!.validate()) return;
 
     if (startDateTime == null) {
@@ -107,32 +135,62 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
 
     final eventProvider = Provider.of<EventProvider>(context, listen: false);
 
-    final success = await eventProvider.createEvent(
-      imageFile: selectedImage,
-      title: titleController.text.trim(),
-      description: descriptionController.text.trim(),
-      eventType: eventTypeController.text.trim(),
-      startTime: startDateTime!.toIso8601String(),
-      endTime: endDateTime!.toIso8601String(),
-      venueName: venueNameController.text.trim(),
-      venueAddress: venueAddressController.text.trim(),
-      capacity: capacityController.text.trim().isEmpty
-          ? null
-          : int.tryParse(capacityController.text.trim()),
-      rsvpDeadline: rsvpDeadline!.toIso8601String(),
-      dressCode: dressCodeController.text.trim().isEmpty
-          ? null
-          : dressCodeController.text.trim(),
-    );
+    final success = isEditMode
+        ? await eventProvider.updateEvent(
+            eventId: widget.eventToEdit!.id,
+            imageFile: selectedImage,
+            title: titleController.text.trim(),
+            description: descriptionController.text.trim(),
+            eventType: eventTypeController.text.trim(),
+            startTime: startDateTime!.toIso8601String(),
+            endTime: endDateTime!.toIso8601String(),
+            venueName: venueNameController.text.trim(),
+            venueAddress: venueAddressController.text.trim(),
+            capacity: capacityController.text.trim().isEmpty
+                ? null
+                : int.tryParse(capacityController.text.trim()),
+            rsvpDeadline: rsvpDeadline!.toIso8601String(),
+            dressCode: dressCodeController.text.trim().isEmpty
+                ? null
+                : dressCodeController.text.trim(),
+          )
+        : await eventProvider.createEvent(
+            imageFile: selectedImage,
+            title: titleController.text.trim(),
+            description: descriptionController.text.trim(),
+            eventType: eventTypeController.text.trim(),
+            startTime: startDateTime!.toIso8601String(),
+            endTime: endDateTime!.toIso8601String(),
+            venueName: venueNameController.text.trim(),
+            venueAddress: venueAddressController.text.trim(),
+            capacity: capacityController.text.trim().isEmpty
+                ? null
+                : int.tryParse(capacityController.text.trim()),
+            rsvpDeadline: rsvpDeadline!.toIso8601String(),
+            dressCode: dressCodeController.text.trim().isEmpty
+                ? null
+                : dressCodeController.text.trim(),
+          );
 
     if (!mounted) return;
 
     if (success) {
-      showMessage('Event created successfully');
+      showMessage(
+        isEditMode
+            ? 'Event updated successfully'
+            : 'Event created successfully',
+      );
 
-      clearForm();
+      if (isEditMode) {
+        Navigator.pop(context);
+      } else {
+        clearForm();
+      }
     } else {
-      showMessage(eventProvider.errorMessage ?? 'Failed to create event');
+      showMessage(
+        eventProvider.errorMessage ??
+            (isEditMode ? 'Failed to update event' : 'Failed to create event'),
+      );
     }
   }
 
@@ -208,22 +266,21 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Create Event',
-                  style: TextStyle(
+                Text(
+                  isEditMode ? 'Edit Event' : 'Create Event',
+                  style: const TextStyle(
                     color: AppColors.textWhite,
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-
                 const SizedBox(height: 6),
-
-                const Text(
-                  'Fill in the event details below.',
-                  style: TextStyle(color: AppColors.textGrey),
+                Text(
+                  isEditMode
+                      ? 'Update the event details below.'
+                      : 'Fill in the event details below.',
+                  style: const TextStyle(color: AppColors.textGrey),
                 ),
-
                 const SizedBox(height: 24),
 
                 Center(
@@ -365,7 +422,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                   child: ElevatedButton(
                     onPressed: eventProvider.isLoading
                         ? null
-                        : handleCreateEvent,
+                        : handleSubmitEvent,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primaryBlue,
                       shape: RoundedRectangleBorder(
@@ -374,9 +431,9 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                     ),
                     child: eventProvider.isLoading
                         ? const CircularProgressIndicator(color: Colors.white)
-                        : const Text(
-                            'Create Event',
-                            style: TextStyle(color: Colors.white),
+                        : Text(
+                            isEditMode ? 'Update Event' : 'Create Event',
+                            style: const TextStyle(color: Colors.white),
                           ),
                   ),
                 ),
