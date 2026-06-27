@@ -10,6 +10,35 @@ class InvitationService {
     return response.data;
   }
 
+  Future<List<dynamic>> generateAiTemplates({
+    required int eventId,
+    required String mood,
+    required String colors,
+    required String tone,
+    String extraMessage = '',
+  }) async {
+    try {
+      final response = await _dio.post(
+        '/events/$eventId/invitations/generate-ai',
+        data: {
+          'mood': mood,
+          'colors': colors,
+          'tone': tone,
+          'extra_message': extraMessage,
+        },
+      );
+
+      return response.data['templates'];
+    } on DioException catch (error) {
+      throw Exception(
+        error.response?.data['message'] ??
+            error.response?.data['error'] ??
+            error.message ??
+            'Failed to generate invitation templates',
+      );
+    }
+  }
+
   Future<Map<String, dynamic>> saveInvitation({
     required int eventId,
     required String title,

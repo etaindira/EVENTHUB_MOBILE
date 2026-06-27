@@ -12,6 +12,22 @@ class InvitationRepository {
     }).toList();
   }
 
+  Future<List<dynamic>> generateAiTemplates({
+    required int eventId,
+    required String mood,
+    required String colors,
+    required String tone,
+    String extraMessage = '',
+  }) async {
+    return await _invitationService.generateAiTemplates(
+      eventId: eventId,
+      mood: mood,
+      colors: colors,
+      tone: tone,
+      extraMessage: extraMessage,
+    );
+  }
+
   Future<InvitationModel> saveInvitation({
     required int eventId,
     required String title,

@@ -6,6 +6,7 @@ import '../../models/event_model.dart';
 import '../../models/invitation_model.dart';
 import '../../providers/invitation_provider.dart';
 import '../../widgets/auth_text_field.dart';
+import '../../widgets/invitations/invitation_canvas.dart';
 
 class CreateInvitationScreen extends StatefulWidget {
   final EventModel event;
@@ -105,12 +106,6 @@ class _CreateInvitationScreenState extends State<CreateInvitationScreen> {
       titleController.text = "You're Invited to ${widget.event.title}";
       messageController.text = widget.event.description;
 
-      selectedInvitationTemplate = 'Elegant Classic';
-      selectedTheme = 'Elegant';
-      selectedColorPalette = 'Blue and white';
-      selectedFontStyle = 'Modern';
-
-      allowPlusOne = false;
       rsvpFormTitleController.text = 'RSVP Confirmation';
       rsvpFormMessageController.text =
           'Please confirm whether you will attend.';
@@ -121,9 +116,7 @@ class _CreateInvitationScreenState extends State<CreateInvitationScreen> {
   }
 
   void refreshPreview() {
-    if (mounted) {
-      setState(() {});
-    }
+    if (mounted) setState(() {});
   }
 
   @override
@@ -159,6 +152,46 @@ class _CreateInvitationScreenState extends State<CreateInvitationScreen> {
       'rsvpFormTitle': rsvpFormTitleController.text.trim(),
       'rsvpFormMessage': rsvpFormMessageController.text.trim(),
     };
+  }
+
+  Future<void> handleGenerateTemplates() async {
+    final invitationProvider = Provider.of<InvitationProvider>(
+      context,
+      listen: false,
+    );
+
+    final success = await invitationProvider.generateAiTemplates(
+      eventId: widget.event.id,
+      mood: selectedTheme,
+      colors: selectedColorPalette,
+      tone: selectedInvitationTemplate,
+      extraMessage: messageController.text.trim(),
+    );
+
+    if (!mounted) return;
+
+    if (!success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            invitationProvider.errorMessage ?? 'Failed to generate templates',
+          ),
+        ),
+      );
+    }
+  }
+
+  void useGeneratedTemplate(dynamic template) {
+    setState(() {
+      titleController.text = template['title'] ?? titleController.text;
+      messageController.text = template['message'] ?? messageController.text;
+
+      selectedInvitationTemplate =
+          template['invitation_template'] ?? selectedInvitationTemplate;
+      selectedTheme = template['theme'] ?? selectedTheme;
+      selectedColorPalette = template['color_palette'] ?? selectedColorPalette;
+      selectedFontStyle = template['font_style'] ?? selectedFontStyle;
+    });
   }
 
   Future<void> handleSaveInvitation() async {
@@ -212,16 +245,6 @@ class _CreateInvitationScreenState extends State<CreateInvitationScreen> {
     if (!mounted) return;
 
     if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            isEditing
-                ? 'Invitation updated successfully'
-                : 'Invitation saved successfully',
-          ),
-        ),
-      );
-
       Navigator.pop(context, true);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -232,6 +255,94 @@ class _CreateInvitationScreenState extends State<CreateInvitationScreen> {
         ),
       );
     }
+  }
+
+  Widget buildGeneratedTemplates() {
+    return Consumer<InvitationProvider>(
+      builder: (context, provider, _) {
+        if (provider.generatedTemplates.isEmpty) {
+          return const SizedBox.shrink();
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Generated Templates',
+              style: TextStyle(
+                color: AppColors.textWhite,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 12),
+            ...provider.generatedTemplates.map((template) {
+              return Container(
+                width: double.infinity,
+                margin: const EdgeInsets.only(bottom: 18),
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: AppColors.borderGrey),
+                ),
+                child: Column(
+                  children: [
+                    InvitationCanvas(
+                      title: template['title'] ?? '',
+                      message: template['message'] ?? '',
+                      dateTime: dateTimeController.text,
+                      venue: venueController.text,
+                      address: venueAddressController.text,
+                      dressCode: widget.event.dressCode,
+                      template:
+                          template['invitation_template'] ?? 'Elegant Classic',
+                      theme: template['theme'] ?? selectedTheme,
+                      colorPalette:
+                          template['color_palette'] ?? selectedColorPalette,
+                      fontStyle: template['font_style'] ?? selectedFontStyle,
+                    ),
+                    const SizedBox(height: 14),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: () => useGeneratedTemplate(template),
+                        icon: const Icon(Icons.check, color: Colors.white),
+                        label: const Text(
+                          'Use This Template',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primaryBlue,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget invitationPreviewCard() {
+    return InvitationCanvas(
+      title: titleController.text,
+      message: messageController.text,
+      dateTime: dateTimeController.text,
+      venue: venueController.text,
+      address: venueAddressController.text,
+      dressCode: widget.event.dressCode,
+      template: selectedInvitationTemplate,
+      theme: selectedTheme,
+      colorPalette: selectedColorPalette,
+      fontStyle: selectedFontStyle,
+    );
   }
 
   Widget buildDropdown({
@@ -255,14 +366,6 @@ class _CreateInvitationScreenState extends State<CreateInvitationScreen> {
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
           borderSide: const BorderSide(color: AppColors.borderGrey),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: AppColors.borderGrey),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: AppColors.lightBlue),
         ),
       ),
       items: options.map((option) {
@@ -291,14 +394,6 @@ class _CreateInvitationScreenState extends State<CreateInvitationScreen> {
           borderRadius: BorderRadius.circular(14),
           borderSide: const BorderSide(color: AppColors.borderGrey),
         ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: AppColors.borderGrey),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: AppColors.lightBlue),
-        ),
       ),
     );
   }
@@ -323,11 +418,6 @@ class _CreateInvitationScreenState extends State<CreateInvitationScreen> {
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 6),
-          const Text(
-            'Customize the RSVP form guests will see after opening their invitation link.',
-            style: TextStyle(color: AppColors.textGrey),
-          ),
           const SizedBox(height: 16),
           SwitchListTile(
             value: allowPlusOne,
@@ -339,10 +429,6 @@ class _CreateInvitationScreenState extends State<CreateInvitationScreen> {
                 color: AppColors.textWhite,
                 fontWeight: FontWeight.bold,
               ),
-            ),
-            subtitle: const Text(
-              'Guests will see a checkbox if they RSVP Yes.',
-              style: TextStyle(color: AppColors.textGrey),
             ),
             onChanged: (value) {
               setState(() {
@@ -381,96 +467,7 @@ class _CreateInvitationScreenState extends State<CreateInvitationScreen> {
                 borderRadius: BorderRadius.circular(14),
                 borderSide: const BorderSide(color: AppColors.borderGrey),
               ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(color: AppColors.borderGrey),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(color: AppColors.lightBlue),
-              ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget invitationPreviewCard() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(22),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: AppColors.borderGrey),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Text(
-            selectedInvitationTemplate,
-            style: const TextStyle(
-              color: AppColors.lightBlue,
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            titleController.text,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: AppColors.textWhite,
-              fontSize: 26,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            messageController.text,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: AppColors.textGrey,
-              fontSize: 15,
-              height: 1.5,
-            ),
-          ),
-          const SizedBox(height: 18),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: AppColors.inputFill,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Column(
-              children: [
-                Text(
-                  dateTimeController.text,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(color: AppColors.textWhite),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  venueController.text,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(color: AppColors.textGrey),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  venueAddressController.text,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(color: AppColors.textGrey),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            '$selectedTheme • $selectedColorPalette • $selectedFontStyle',
-            textAlign: TextAlign.center,
-            style: const TextStyle(color: AppColors.textGrey, fontSize: 13),
           ),
         ],
       ),
@@ -524,14 +521,6 @@ class _CreateInvitationScreenState extends State<CreateInvitationScreen> {
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
                       borderSide: const BorderSide(color: AppColors.borderGrey),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
-                      borderSide: const BorderSide(color: AppColors.borderGrey),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
-                      borderSide: const BorderSide(color: AppColors.lightBlue),
                     ),
                   ),
                 ),
@@ -605,6 +594,31 @@ class _CreateInvitationScreenState extends State<CreateInvitationScreen> {
                     });
                   },
                 ),
+                const SizedBox(height: 18),
+                SizedBox(
+                  width: double.infinity,
+                  height: 52,
+                  child: ElevatedButton.icon(
+                    onPressed: invitationProvider.isGeneratingTemplates
+                        ? null
+                        : handleGenerateTemplates,
+                    icon: const Icon(Icons.auto_awesome, color: Colors.white),
+                    label: Text(
+                      invitationProvider.isGeneratingTemplates
+                          ? 'Generating...'
+                          : 'Generate 3 AI Templates',
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primaryBlue,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 18),
+                buildGeneratedTemplates(),
                 const SizedBox(height: 18),
                 rsvpSettingsCard(),
                 const SizedBox(height: 24),
