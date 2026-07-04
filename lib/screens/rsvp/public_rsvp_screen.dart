@@ -16,6 +16,7 @@ class PublicRsvpScreen extends StatefulWidget {
 class _PublicRsvpScreenState extends State<PublicRsvpScreen> {
   String? selectedResponse;
   bool plusOne = false;
+  int plusOneCount = 1;
 
   @override
   void initState() {
@@ -41,6 +42,7 @@ class _PublicRsvpScreenState extends State<PublicRsvpScreen> {
       token: widget.token,
       response: selectedResponse!,
       plusOne: plusOne,
+      plusOneCount: plusOne ? plusOneCount : 0,
     );
 
     if (!mounted) return;
@@ -73,6 +75,7 @@ class _PublicRsvpScreenState extends State<PublicRsvpScreen> {
 
             if (value == 'no') {
               plusOne = false;
+              plusOneCount = 1;
             }
           });
         },
@@ -127,6 +130,61 @@ class _PublicRsvpScreenState extends State<PublicRsvpScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget plusOneDropdown(int maxPlusOnes) {
+    if (maxPlusOnes <= 0) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 14),
+        const Text(
+          'How many extra people are you bringing?',
+          style: TextStyle(
+            color: AppColors.textWhite,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 10),
+        DropdownButtonFormField<int>(
+          value: plusOneCount,
+          dropdownColor: AppColors.surface,
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: AppColors.background,
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: const BorderSide(color: AppColors.borderGrey),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: const BorderSide(color: AppColors.primaryBlue),
+            ),
+          ),
+          items: List.generate(maxPlusOnes, (index) {
+            final value = index + 1;
+            return DropdownMenuItem<int>(
+              value: value,
+              child: Text(
+                '$value extra guest${value > 1 ? 's' : ''}',
+                style: const TextStyle(color: AppColors.textWhite),
+              ),
+            );
+          }),
+          onChanged: (value) {
+            setState(() {
+              plusOneCount = value ?? 1;
+            });
+          },
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'The organizer allows up to $maxPlusOnes extra guest${maxPlusOnes > 1 ? 's' : ''}.',
+          style: const TextStyle(color: AppColors.textGrey, fontSize: 13),
+        ),
+      ],
     );
   }
 
@@ -277,15 +335,27 @@ class _PublicRsvpScreenState extends State<PublicRsvpScreen> {
                               onChanged: (value) {
                                 setState(() {
                                   plusOne = value ?? false;
+                                  if (!plusOne) {
+                                    plusOneCount = 1;
+                                  }
                                 });
                               },
                               activeColor: AppColors.primaryBlue,
                               title: const Text(
-                                'I am bringing a plus one',
+                                'I am bringing extra guests',
                                 style: TextStyle(color: AppColors.textWhite),
+                              ),
+                              subtitle: Text(
+                                'Maximum allowed: ${data.rsvpSettings.maxPlusOnes}',
+                                style: const TextStyle(
+                                  color: AppColors.textGrey,
+                                ),
                               ),
                               controlAffinity: ListTileControlAffinity.leading,
                             ),
+
+                            if (plusOne)
+                              plusOneDropdown(data.rsvpSettings.maxPlusOnes),
                           ],
 
                           const SizedBox(height: 24),

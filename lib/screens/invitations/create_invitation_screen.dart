@@ -40,6 +40,9 @@ class _CreateInvitationScreenState extends State<CreateInvitationScreen> {
   String selectedFontStyle = 'Modern';
 
   bool allowPlusOne = false;
+  int maxPlusOnes = 1;
+
+  final List<int> maxPlusOneOptions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
   final List<String> invitationTemplateOptions = [
     'Elegant Classic',
@@ -96,7 +99,9 @@ class _CreateInvitationScreenState extends State<CreateInvitationScreen> {
       selectedColorPalette = invitation.colorPalette ?? selectedColorPalette;
       selectedFontStyle = invitation.fontStyle ?? selectedFontStyle;
 
-      allowPlusOne = invitation.allowPlusOne ?? false;
+      allowPlusOne = invitation.allowPlusOne;
+      maxPlusOnes = invitation.maxPlusOnes > 0 ? invitation.maxPlusOnes : 1;
+
       rsvpFormTitleController.text =
           invitation.rsvpFormTitle ?? 'RSVP Confirmation';
       rsvpFormMessageController.text =
@@ -149,6 +154,7 @@ class _CreateInvitationScreenState extends State<CreateInvitationScreen> {
       'colorPalette': selectedColorPalette,
       'fontStyle': selectedFontStyle,
       'allowPlusOne': allowPlusOne,
+      'maxPlusOnes': allowPlusOne ? maxPlusOnes : 0,
       'rsvpFormTitle': rsvpFormTitleController.text.trim(),
       'rsvpFormMessage': rsvpFormMessageController.text.trim(),
     };
@@ -208,6 +214,8 @@ class _CreateInvitationScreenState extends State<CreateInvitationScreen> {
         'Venue: ${venueController.text.trim()}\n'
         'Address: ${venueAddressController.text.trim()}';
 
+    final finalMaxPlusOnes = allowPlusOne ? maxPlusOnes : 0;
+
     bool success;
 
     if (isEditing) {
@@ -222,6 +230,7 @@ class _CreateInvitationScreenState extends State<CreateInvitationScreen> {
         templateData: buildTemplateData(),
         status: 'draft',
         allowPlusOne: allowPlusOne,
+        maxPlusOnes: finalMaxPlusOnes,
         rsvpFormTitle: rsvpFormTitleController.text.trim(),
         rsvpFormMessage: rsvpFormMessageController.text.trim(),
       );
@@ -237,6 +246,7 @@ class _CreateInvitationScreenState extends State<CreateInvitationScreen> {
         templateData: buildTemplateData(),
         status: 'draft',
         allowPlusOne: allowPlusOne,
+        maxPlusOnes: finalMaxPlusOnes,
         rsvpFormTitle: rsvpFormTitleController.text.trim(),
         rsvpFormMessage: rsvpFormMessageController.text.trim(),
       );
@@ -295,6 +305,7 @@ class _CreateInvitationScreenState extends State<CreateInvitationScreen> {
                       venue: venueController.text,
                       address: venueAddressController.text,
                       dressCode: widget.event.dressCode,
+                      rsvpDeadline: widget.event.rsvpDeadline,
                       template:
                           template['invitation_template'] ?? 'Elegant Classic',
                       theme: template['theme'] ?? selectedTheme,
@@ -338,6 +349,7 @@ class _CreateInvitationScreenState extends State<CreateInvitationScreen> {
       venue: venueController.text,
       address: venueAddressController.text,
       dressCode: widget.event.dressCode,
+      rsvpDeadline: widget.event.rsvpDeadline,
       template: selectedInvitationTemplate,
       theme: selectedTheme,
       colorPalette: selectedColorPalette,
@@ -398,6 +410,41 @@ class _CreateInvitationScreenState extends State<CreateInvitationScreen> {
     );
   }
 
+  Widget maxPlusOnesDropdown() {
+    return DropdownButtonFormField<int>(
+      value: maxPlusOnes,
+      dropdownColor: AppColors.surface,
+      style: const TextStyle(color: AppColors.textWhite),
+      iconEnabledColor: AppColors.textGrey,
+      decoration: InputDecoration(
+        labelText: 'Maximum additional guests per invited guest',
+        labelStyle: const TextStyle(color: AppColors.textGrey),
+        prefixIcon: const Icon(
+          Icons.group_add_outlined,
+          color: AppColors.textGrey,
+        ),
+        filled: true,
+        fillColor: AppColors.inputFill,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: AppColors.borderGrey),
+        ),
+      ),
+      items: maxPlusOneOptions.map((number) {
+        return DropdownMenuItem<int>(
+          value: number,
+          child: Text(number.toString()),
+        );
+      }).toList(),
+      onChanged: (value) {
+        if (value == null) return;
+        setState(() {
+          maxPlusOnes = value;
+        });
+      },
+    );
+  }
+
   Widget rsvpSettingsCard() {
     return Container(
       width: double.infinity,
@@ -424,18 +471,34 @@ class _CreateInvitationScreenState extends State<CreateInvitationScreen> {
             activeColor: AppColors.primaryBlue,
             contentPadding: EdgeInsets.zero,
             title: const Text(
-              'Allow guests to bring a plus one',
+              'Allow additional guests',
               style: TextStyle(
                 color: AppColors.textWhite,
                 fontWeight: FontWeight.bold,
               ),
             ),
+            subtitle: const Text(
+              'Guests can select how many people they are bringing with them.',
+              style: TextStyle(color: AppColors.textGrey),
+            ),
             onChanged: (value) {
               setState(() {
                 allowPlusOne = value;
+                if (!allowPlusOne) {
+                  maxPlusOnes = 1;
+                }
               });
             },
           ),
+          if (allowPlusOne) ...[
+            const SizedBox(height: 14),
+            maxPlusOnesDropdown(),
+            const SizedBox(height: 8),
+            Text(
+              'Each invited guest can bring up to $maxPlusOnes additional guest${maxPlusOnes == 1 ? '' : 's'}.',
+              style: const TextStyle(color: AppColors.textGrey, fontSize: 13),
+            ),
+          ],
           const SizedBox(height: 14),
           AuthTextField(
             controller: rsvpFormTitleController,

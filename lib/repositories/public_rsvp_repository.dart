@@ -12,12 +12,21 @@ class PublicRsvpRepository {
   Future<Map<String, dynamic>> submitRsvp({
     required String token,
     required String response,
+
+    // Whether guest is bringing extra guests
     required bool plusOne,
+
+    // Number of additional guests
+    required int plusOneCount,
+
+    String? note,
   }) async {
     return await _service.submitRsvp(
       token: token,
       response: response,
       plusOne: plusOne,
+      plusOneCount: plusOneCount,
+      note: note,
     );
   }
 }

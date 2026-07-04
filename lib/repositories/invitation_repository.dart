@@ -39,6 +39,7 @@ class InvitationRepository {
     dynamic templateData,
     String status = 'draft',
     bool allowPlusOne = false,
+    int maxPlusOnes = 0,
     String rsvpFormTitle = 'RSVP Confirmation',
     String rsvpFormMessage = 'Please confirm whether you will attend.',
   }) async {
@@ -53,6 +54,7 @@ class InvitationRepository {
       templateData: templateData,
       status: status,
       allowPlusOne: allowPlusOne,
+      maxPlusOnes: maxPlusOnes,
       rsvpFormTitle: rsvpFormTitle,
       rsvpFormMessage: rsvpFormMessage,
     );
@@ -71,6 +73,7 @@ class InvitationRepository {
     dynamic templateData,
     String status = 'draft',
     bool allowPlusOne = false,
+    int maxPlusOnes = 0,
     String rsvpFormTitle = 'RSVP Confirmation',
     String rsvpFormMessage = 'Please confirm whether you will attend.',
   }) async {
@@ -85,6 +88,7 @@ class InvitationRepository {
       templateData: templateData,
       status: status,
       allowPlusOne: allowPlusOne,
+      maxPlusOnes: maxPlusOnes,
       rsvpFormTitle: rsvpFormTitle,
       rsvpFormMessage: rsvpFormMessage,
     );

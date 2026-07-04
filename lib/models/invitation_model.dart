@@ -17,8 +17,9 @@ class InvitationModel {
   final String? shareUrl;
   final String? status;
 
-  // NEW RSVP SETTINGS
-  final bool? allowPlusOne;
+  // RSVP SETTINGS
+  final bool allowPlusOne;
+  final int maxPlusOnes;
   final String? rsvpFormTitle;
   final String? rsvpFormMessage;
 
@@ -37,8 +38,9 @@ class InvitationModel {
     this.shareUrl,
     this.status,
 
-    // NEW
-    this.allowPlusOne,
+    // RSVP SETTINGS
+    this.allowPlusOne = false,
+    this.maxPlusOnes = 0,
     this.rsvpFormTitle,
     this.rsvpFormMessage,
   });
@@ -53,7 +55,6 @@ class InvitationModel {
       message: json['message'] ?? '',
 
       invitationTemplate: json['invitation_template'],
-
       theme: json['theme'],
       colorPalette: json['color_palette'],
       fontStyle: json['font_style'],
@@ -64,14 +65,79 @@ class InvitationModel {
       shareUrl: json['share_url'],
       status: json['status'],
 
-      // NEW RSVP SETTINGS
+      // RSVP SETTINGS
       allowPlusOne: json['allow_plus_one'] ?? false,
+      maxPlusOnes: json['max_plus_ones'] ?? 0,
 
       rsvpFormTitle: json['rsvp_form_title'] ?? 'RSVP Confirmation',
 
       rsvpFormMessage:
           json['rsvp_form_message'] ??
           'Please confirm whether you will attend.',
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'event_id': eventId,
+      'user_id': userId,
+      'title': title,
+      'message': message,
+      'invitation_template': invitationTemplate,
+      'theme': theme,
+      'color_palette': colorPalette,
+      'font_style': fontStyle,
+      'template_data': templateData,
+      'preview_token': previewToken,
+      'share_url': shareUrl,
+      'status': status,
+
+      // RSVP SETTINGS
+      'allow_plus_one': allowPlusOne,
+      'max_plus_ones': maxPlusOnes,
+      'rsvp_form_title': rsvpFormTitle,
+      'rsvp_form_message': rsvpFormMessage,
+    };
+  }
+
+  InvitationModel copyWith({
+    int? id,
+    int? eventId,
+    int? userId,
+    String? title,
+    String? message,
+    String? invitationTemplate,
+    String? theme,
+    String? colorPalette,
+    String? fontStyle,
+    dynamic templateData,
+    String? previewToken,
+    String? shareUrl,
+    String? status,
+    bool? allowPlusOne,
+    int? maxPlusOnes,
+    String? rsvpFormTitle,
+    String? rsvpFormMessage,
+  }) {
+    return InvitationModel(
+      id: id ?? this.id,
+      eventId: eventId ?? this.eventId,
+      userId: userId ?? this.userId,
+      title: title ?? this.title,
+      message: message ?? this.message,
+      invitationTemplate: invitationTemplate ?? this.invitationTemplate,
+      theme: theme ?? this.theme,
+      colorPalette: colorPalette ?? this.colorPalette,
+      fontStyle: fontStyle ?? this.fontStyle,
+      templateData: templateData ?? this.templateData,
+      previewToken: previewToken ?? this.previewToken,
+      shareUrl: shareUrl ?? this.shareUrl,
+      status: status ?? this.status,
+      allowPlusOne: allowPlusOne ?? this.allowPlusOne,
+      maxPlusOnes: maxPlusOnes ?? this.maxPlusOnes,
+      rsvpFormTitle: rsvpFormTitle ?? this.rsvpFormTitle,
+      rsvpFormMessage: rsvpFormMessage ?? this.rsvpFormMessage,
     );
   }
 }

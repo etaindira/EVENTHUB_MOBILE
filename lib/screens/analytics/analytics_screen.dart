@@ -14,20 +14,27 @@ class AnalyticsScreen extends StatefulWidget {
 }
 
 class _AnalyticsScreenState extends State<AnalyticsScreen> {
+  late DashboardProvider _dashboardProvider;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _dashboardProvider = Provider.of<DashboardProvider>(context, listen: false);
+  }
+
   @override
   void initState() {
     super.initState();
 
     Future.microtask(() {
-      final provider = Provider.of<DashboardProvider>(context, listen: false);
-      provider.fetchDashboardEvents();
-      provider.startAutoRefresh();
+      _dashboardProvider.fetchDashboardEvents();
+      _dashboardProvider.startAutoRefresh();
     });
   }
 
   @override
   void dispose() {
-    Provider.of<DashboardProvider>(context, listen: false).stopAutoRefresh();
+    _dashboardProvider.stopAutoRefresh();
     super.dispose();
   }
 

@@ -113,11 +113,13 @@ class PublicInvitation {
 
 class PublicRsvpSettings {
   final bool allowPlusOne;
+  final int maxPlusOnes;
   final String rsvpFormTitle;
   final String rsvpFormMessage;
 
   PublicRsvpSettings({
     required this.allowPlusOne,
+    required this.maxPlusOnes,
     required this.rsvpFormTitle,
     required this.rsvpFormMessage,
   });
@@ -125,6 +127,7 @@ class PublicRsvpSettings {
   factory PublicRsvpSettings.fromJson(Map<String, dynamic> json) {
     return PublicRsvpSettings(
       allowPlusOne: json['allow_plus_one'] ?? false,
+      maxPlusOnes: json['max_plus_ones'] ?? 0,
       rsvpFormTitle: json['rsvp_form_title'] ?? 'RSVP Confirmation',
       rsvpFormMessage:
           json['rsvp_form_message'] ??

@@ -7,23 +7,17 @@ class InvitationProvider extends ChangeNotifier {
   final InvitationRepository _invitationRepository = InvitationRepository();
 
   List<InvitationModel> _invitations = [];
-
-  // NEW: Generated templates (not yet saved)
   List<dynamic> _generatedTemplates = [];
 
   bool _isLoading = false;
-
-  // NEW: Separate loading state for template generation
   bool _isGeneratingTemplates = false;
 
   String? _errorMessage;
 
   List<InvitationModel> get invitations => _invitations;
-
   List<dynamic> get generatedTemplates => _generatedTemplates;
 
   bool get isLoading => _isLoading;
-
   bool get isGeneratingTemplates => _isGeneratingTemplates;
 
   String? get errorMessage => _errorMessage;
@@ -49,10 +43,6 @@ class InvitationProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
-
-  // ===========================
-  // GENERATE AI TEMPLATES
-  // ===========================
 
   Future<bool> generateAiTemplates({
     required int eventId,
@@ -87,15 +77,10 @@ class InvitationProvider extends ChangeNotifier {
     }
   }
 
-  // Optional helper if you ever want to clear generated templates
   void clearGeneratedTemplates() {
     _generatedTemplates.clear();
     notifyListeners();
   }
-
-  // ===========================
-  // SAVE INVITATION
-  // ===========================
 
   Future<bool> saveInvitation({
     required int eventId,
@@ -107,8 +92,8 @@ class InvitationProvider extends ChangeNotifier {
     required String fontStyle,
     dynamic templateData,
     String status = 'draft',
-
     bool allowPlusOne = false,
+    int maxPlusOnes = 0,
     String rsvpFormTitle = 'RSVP Confirmation',
     String rsvpFormMessage = 'Please confirm whether you will attend.',
   }) async {
@@ -128,6 +113,7 @@ class InvitationProvider extends ChangeNotifier {
         templateData: templateData,
         status: status,
         allowPlusOne: allowPlusOne,
+        maxPlusOnes: maxPlusOnes,
         rsvpFormTitle: rsvpFormTitle,
         rsvpFormMessage: rsvpFormMessage,
       );
@@ -147,10 +133,6 @@ class InvitationProvider extends ChangeNotifier {
     }
   }
 
-  // ===========================
-  // UPDATE INVITATION
-  // ===========================
-
   Future<bool> updateInvitation({
     required int invitationId,
     required String title,
@@ -161,8 +143,8 @@ class InvitationProvider extends ChangeNotifier {
     required String fontStyle,
     dynamic templateData,
     String status = 'draft',
-
     bool allowPlusOne = false,
+    int maxPlusOnes = 0,
     String rsvpFormTitle = 'RSVP Confirmation',
     String rsvpFormMessage = 'Please confirm whether you will attend.',
   }) async {
@@ -182,6 +164,7 @@ class InvitationProvider extends ChangeNotifier {
         templateData: templateData,
         status: status,
         allowPlusOne: allowPlusOne,
+        maxPlusOnes: maxPlusOnes,
         rsvpFormTitle: rsvpFormTitle,
         rsvpFormMessage: rsvpFormMessage,
       );
@@ -207,10 +190,6 @@ class InvitationProvider extends ChangeNotifier {
     }
   }
 
-  // ===========================
-  // DELETE INVITATION
-  // ===========================
-
   Future<bool> deleteInvitation(int invitationId) async {
     try {
       await _invitationRepository.deleteInvitation(invitationId);
@@ -227,10 +206,6 @@ class InvitationProvider extends ChangeNotifier {
       return false;
     }
   }
-
-  // ===========================
-  // SEND INVITATIONS
-  // ===========================
 
   Future<bool> sendInvitationToGuests({
     required int eventId,

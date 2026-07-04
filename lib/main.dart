@@ -18,6 +18,7 @@ import 'providers/payment_provider.dart';
 import 'providers/dashboard_provider.dart';
 import 'providers/public_rsvp_provider.dart';
 import 'screens/rsvp/public_rsvp_screen.dart';
+import 'screens/invitations/public_invitation_screen.dart';
 
 void main() {
   runApp(const EventHubApp());
@@ -54,6 +55,17 @@ class EventHubApp extends StatelessWidget {
         },
         onGenerateRoute: (settings) {
           final uri = Uri.parse(settings.name ?? '');
+          if (uri.pathSegments.length == 2 && uri.pathSegments[0] == 'invite') {
+            final previewToken = uri.pathSegments[1];
+            final guestToken = uri.queryParameters['guest'];
+
+            return MaterialPageRoute(
+              builder: (_) => PublicInvitationScreen(
+                previewToken: previewToken,
+                guestToken: guestToken,
+              ),
+            );
+          }
 
           if (uri.pathSegments.length == 2 && uri.pathSegments[0] == 'rsvp') {
             final token = uri.pathSegments[1];

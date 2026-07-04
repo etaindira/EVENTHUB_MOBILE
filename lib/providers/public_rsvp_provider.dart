@@ -39,6 +39,8 @@ class PublicRsvpProvider extends ChangeNotifier {
     required String token,
     required String response,
     required bool plusOne,
+    required int plusOneCount,
+    String? note,
   }) async {
     try {
       _isSubmitting = true;
@@ -49,6 +51,8 @@ class PublicRsvpProvider extends ChangeNotifier {
         token: token,
         response: response,
         plusOne: plusOne,
+        plusOneCount: plusOneCount,
+        note: note,
       );
 
       _submitted = true;

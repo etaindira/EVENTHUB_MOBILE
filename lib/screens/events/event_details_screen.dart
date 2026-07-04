@@ -9,6 +9,7 @@ import '../../models/event_model.dart';
 import '../../models/invitation_model.dart';
 import '../../providers/invitation_provider.dart';
 import '../../screens/invitations/create_invitation_screen.dart';
+import '../../widgets/invitations/invitation_canvas.dart';
 
 class EventDetailsScreen extends StatelessWidget {
   final EventModel event;
@@ -258,7 +259,7 @@ class _EventDetailsTabState extends State<EventDetailsTab> {
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(top: 12, bottom: 14),
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 22),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(18),
@@ -276,32 +277,32 @@ class _EventDetailsTabState extends State<EventDetailsTab> {
             ),
           ),
 
-          const SizedBox(height: 10),
-
-          Text(
-            invitation.title,
-            style: const TextStyle(
-              color: AppColors.textWhite,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-
-          const SizedBox(height: 8),
-
-          Text(
-            invitation.message,
-            style: const TextStyle(color: AppColors.textGrey, height: 1.4),
-          ),
-
-          const SizedBox(height: 12),
-
-          Text(
-            '${invitation.invitationTemplate ?? ''} • ${invitation.theme ?? ''} • ${invitation.colorPalette ?? ''}',
-            style: const TextStyle(color: AppColors.textGrey),
-          ),
-
           const SizedBox(height: 16),
+
+          InvitationCanvas(
+            title: invitation.title,
+            message: invitation.message,
+
+            dateTime: event.startTime,
+
+            venue: event.venueName,
+
+            address: event.venueAddress,
+
+            dressCode: event.dressCode,
+
+            rsvpDeadline: event.rsvpDeadline,
+
+            template: invitation.invitationTemplate ?? "Elegant Classic",
+
+            theme: invitation.theme ?? "",
+
+            colorPalette: invitation.colorPalette ?? "",
+
+            fontStyle: invitation.fontStyle ?? "",
+          ),
+
+          const SizedBox(height: 18),
 
           Row(
             children: [
