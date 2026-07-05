@@ -1,6 +1,6 @@
 //For Windows desktop or Chrome use
 class ApiConstants {
-  static const String baseUrl = 'http://localhost:5000';
+  static const String baseUrl = 'https://eventhub-backend-lgpa.onrender.com';
 
   static const String apiPrefix = '/api';
 

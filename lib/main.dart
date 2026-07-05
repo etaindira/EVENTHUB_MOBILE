@@ -2,14 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'core/constants/app_routes.dart';
+import 'theme/app_theme.dart';
+
 import 'providers/auth_provider.dart';
-import 'screens/auth/auth_gate.dart';
-import 'screens/auth/login_screen.dart';
-import 'screens/auth/signup_screen.dart';
-import 'screens/auth/verification_screen.dart';
-import 'screens/auth/forgot_password_screen.dart';
-import 'screens/auth/reset_password_screen.dart';
-import 'screens/events/event_details_screen.dart';
 import 'providers/profile_provider.dart';
 import 'providers/event_provider.dart';
 import 'providers/guest_provider.dart';
@@ -17,6 +12,13 @@ import 'providers/invitation_provider.dart';
 import 'providers/payment_provider.dart';
 import 'providers/dashboard_provider.dart';
 import 'providers/public_rsvp_provider.dart';
+
+import 'screens/auth/auth_gate.dart';
+import 'screens/auth/login_screen.dart';
+import 'screens/auth/signup_screen.dart';
+import 'screens/auth/verification_screen.dart';
+import 'screens/auth/forgot_password_screen.dart';
+import 'screens/auth/reset_password_screen.dart';
 import 'screens/rsvp/public_rsvp_screen.dart';
 import 'screens/invitations/public_invitation_screen.dart';
 
@@ -45,6 +47,7 @@ class EventHubApp extends StatelessWidget {
       child: MaterialApp(
         title: 'EventHub',
         debugShowCheckedModeBanner: false,
+        theme: AppTheme.lightTheme,
         home: const AuthGate(),
         routes: {
           AppRoutes.login: (context) => const LoginScreen(),
@@ -55,6 +58,7 @@ class EventHubApp extends StatelessWidget {
         },
         onGenerateRoute: (settings) {
           final uri = Uri.parse(settings.name ?? '');
+
           if (uri.pathSegments.length == 2 && uri.pathSegments[0] == 'invite') {
             final previewToken = uri.pathSegments[1];
             final guestToken = uri.queryParameters['guest'];

@@ -8,6 +8,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_routes.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/profile_provider.dart';
+import '../../core/constants/api_constants.dart';
 
 import 'update_profile_info_screen.dart';
 import 'update_phone_screen.dart';
@@ -22,7 +23,7 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  final String baseUrl = 'http://localhost:5000';
+  final String baseUrl = ApiConstants.baseUrl;
 
   @override
   void initState() {
