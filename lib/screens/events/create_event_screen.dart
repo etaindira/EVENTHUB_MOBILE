@@ -4,10 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
-import '../../core/constants/app_colors.dart';
 import '../../models/event_model.dart';
 import '../../providers/event_provider.dart';
-import '../../widgets/auth_text_field.dart';
+import '../../theme/app_colors.dart';
+import '../../theme/app_spacing.dart';
+import '../../theme/app_text_styles.dart';
+import '../../widgets/app_card.dart';
+import '../../widgets/app_textfield.dart';
+import '../../widgets/primary_button.dart';
 
 class CreateEventScreen extends StatefulWidget {
   final EventModel? eventToEdit;
@@ -95,7 +99,6 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     );
 
     if (date == null) return null;
-
     if (!mounted) return null;
 
     final time = await showTimePicker(
@@ -222,32 +225,95 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     required DateTime? value,
     required VoidCallback onTap,
   }) {
+    final hasValue = value != null;
+
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(18),
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         decoration: BoxDecoration(
-          color: AppColors.inputFill,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AppColors.borderGrey),
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: hasValue ? AppColors.primary : AppColors.border,
+          ),
         ),
         child: Row(
           children: [
-            const Icon(
+            Icon(
               Icons.calendar_month_outlined,
-              color: AppColors.textGrey,
+              color: hasValue ? AppColors.primary : AppColors.textMuted,
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: AppSpacing.md),
             Expanded(
-              child: Text(
-                '$label: ${formatDateTime(value)}',
-                style: const TextStyle(color: AppColors.textWhite),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(label, style: AppTextStyles.bodySmall),
+                  const SizedBox(height: 3),
+                  Text(
+                    formatDateTime(value),
+                    style: AppTextStyles.bodyLarge.copyWith(
+                      color: hasValue
+                          ? AppColors.textPrimary
+                          : AppColors.textSecondary,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget imagePickerCard() {
+    return AppCard(
+      onTap: pickImage,
+      child: Row(
+        children: [
+          Container(
+            width: 72,
+            height: 72,
+            decoration: BoxDecoration(
+              color: AppColors.primaryLight,
+              borderRadius: BorderRadius.circular(18),
+              image: selectedImage != null
+                  ? DecorationImage(
+                      image: FileImage(selectedImage!),
+                      fit: BoxFit.cover,
+                    )
+                  : null,
+            ),
+            child: selectedImage == null
+                ? const Icon(
+                    Icons.add_a_photo_outlined,
+                    color: AppColors.primary,
+                    size: 30,
+                  )
+                : null,
+          ),
+          const SizedBox(width: AppSpacing.lg),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Event Cover Photo', style: AppTextStyles.headingSmall),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  selectedImage == null
+                      ? 'Tap to upload an event image'
+                      : 'Tap to change image',
+                  style: AppTextStyles.bodyMedium,
+                ),
+              ],
+            ),
+          ),
+          const Icon(Icons.chevron_right, color: AppColors.textMuted),
+        ],
       ),
     );
   }
@@ -258,189 +324,150 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(22),
-          child: Form(
-            key: formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  isEditMode ? 'Edit Event' : 'Create Event',
-                  style: const TextStyle(
-                    color: AppColors.textWhite,
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  isEditMode
-                      ? 'Update the event details below.'
-                      : 'Fill in the event details below.',
-                  style: const TextStyle(color: AppColors.textGrey),
-                ),
-                const SizedBox(height: 24),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        child: Form(
+          key: formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                isEditMode ? 'Edit Event' : 'Create Event',
+                style: AppTextStyles.headingLarge,
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                isEditMode
+                    ? 'Update your event details below.'
+                    : 'Set up your event details and guest experience.',
+                style: AppTextStyles.bodyMedium,
+              ),
+              const SizedBox(height: AppSpacing.xl),
 
-                Center(
-                  child: GestureDetector(
-                    onTap: pickImage,
-                    child: CircleAvatar(
-                      radius: 55,
-                      backgroundColor: AppColors.surface,
-                      backgroundImage: selectedImage != null
-                          ? FileImage(selectedImage!)
-                          : null,
-                      child: selectedImage == null
-                          ? const Icon(
-                              Icons.add_a_photo_outlined,
-                              color: AppColors.lightBlue,
-                              size: 34,
-                            )
-                          : null,
-                    ),
-                  ),
-                ),
+              imagePickerCard(),
 
-                const SizedBox(height: 24),
+              const SizedBox(height: AppSpacing.xl),
 
-                AuthTextField(
-                  controller: titleController,
-                  label: 'Event Title',
-                  icon: Icons.title,
-                  validator: (value) => value == null || value.isEmpty
-                      ? 'Title is required'
-                      : null,
-                ),
+              AppTextField(
+                controller: titleController,
+                label: 'Event Title',
+                prefixIcon: Icons.title,
+                validator: (value) =>
+                    value == null || value.isEmpty ? 'Title is required' : null,
+              ),
 
-                const SizedBox(height: 14),
+              const SizedBox(height: AppSpacing.lg),
 
-                AuthTextField(
-                  controller: descriptionController,
-                  label: 'Event Description',
-                  icon: Icons.description_outlined,
-                  validator: (value) => value == null || value.isEmpty
-                      ? 'Description is required'
-                      : null,
-                ),
+              AppTextField(
+                controller: descriptionController,
+                label: 'Event Description',
+                prefixIcon: Icons.description_outlined,
+                maxLines: 3,
+                validator: (value) => value == null || value.isEmpty
+                    ? 'Description is required'
+                    : null,
+              ),
 
-                const SizedBox(height: 14),
+              const SizedBox(height: AppSpacing.lg),
 
-                AuthTextField(
-                  controller: eventTypeController,
-                  label: 'Event Type',
-                  icon: Icons.category_outlined,
-                  validator: (value) => value == null || value.isEmpty
-                      ? 'Event type is required'
-                      : null,
-                ),
+              AppTextField(
+                controller: eventTypeController,
+                label: 'Event Type',
+                prefixIcon: Icons.category_outlined,
+                validator: (value) => value == null || value.isEmpty
+                    ? 'Event type is required'
+                    : null,
+              ),
 
-                const SizedBox(height: 14),
+              const SizedBox(height: AppSpacing.lg),
 
-                dateBox(
-                  label: 'Start Time',
-                  value: startDateTime,
-                  onTap: () async {
-                    final picked = await pickDateTime();
-                    if (picked != null) {
-                      setState(() => startDateTime = picked);
-                    }
-                  },
-                ),
+              dateBox(
+                label: 'Start Time',
+                value: startDateTime,
+                onTap: () async {
+                  final picked = await pickDateTime();
+                  if (picked != null) {
+                    setState(() => startDateTime = picked);
+                  }
+                },
+              ),
 
-                const SizedBox(height: 14),
+              const SizedBox(height: AppSpacing.lg),
 
-                dateBox(
-                  label: 'End Time',
-                  value: endDateTime,
-                  onTap: () async {
-                    final picked = await pickDateTime();
-                    if (picked != null) {
-                      setState(() => endDateTime = picked);
-                    }
-                  },
-                ),
+              dateBox(
+                label: 'End Time',
+                value: endDateTime,
+                onTap: () async {
+                  final picked = await pickDateTime();
+                  if (picked != null) {
+                    setState(() => endDateTime = picked);
+                  }
+                },
+              ),
 
-                const SizedBox(height: 14),
+              const SizedBox(height: AppSpacing.lg),
 
-                AuthTextField(
-                  controller: venueNameController,
-                  label: 'Venue Name',
-                  icon: Icons.location_city_outlined,
-                  validator: (value) => value == null || value.isEmpty
-                      ? 'Venue name is required'
-                      : null,
-                ),
+              AppTextField(
+                controller: venueNameController,
+                label: 'Venue Name',
+                prefixIcon: Icons.location_city_outlined,
+                validator: (value) => value == null || value.isEmpty
+                    ? 'Venue name is required'
+                    : null,
+              ),
 
-                const SizedBox(height: 14),
+              const SizedBox(height: AppSpacing.lg),
 
-                AuthTextField(
-                  controller: venueAddressController,
-                  label: 'Venue Address',
-                  icon: Icons.location_on_outlined,
-                  validator: (value) => value == null || value.isEmpty
-                      ? 'Venue address is required'
-                      : null,
-                ),
+              AppTextField(
+                controller: venueAddressController,
+                label: 'Venue Address',
+                prefixIcon: Icons.location_on_outlined,
+                validator: (value) => value == null || value.isEmpty
+                    ? 'Venue address is required'
+                    : null,
+              ),
 
-                const SizedBox(height: 14),
+              const SizedBox(height: AppSpacing.lg),
 
-                AuthTextField(
-                  controller: capacityController,
-                  label: 'Capacity Optional',
-                  icon: Icons.groups_outlined,
-                  keyboardType: TextInputType.number,
-                ),
+              AppTextField(
+                controller: capacityController,
+                label: 'Capacity Optional',
+                prefixIcon: Icons.groups_outlined,
+                keyboardType: TextInputType.number,
+              ),
 
-                const SizedBox(height: 14),
+              const SizedBox(height: AppSpacing.lg),
 
-                dateBox(
-                  label: 'RSVP Deadline',
-                  value: rsvpDeadline,
-                  onTap: () async {
-                    final picked = await pickDateTime();
-                    if (picked != null) {
-                      setState(() => rsvpDeadline = picked);
-                    }
-                  },
-                ),
+              dateBox(
+                label: 'RSVP Deadline',
+                value: rsvpDeadline,
+                onTap: () async {
+                  final picked = await pickDateTime();
+                  if (picked != null) {
+                    setState(() => rsvpDeadline = picked);
+                  }
+                },
+              ),
 
-                const SizedBox(height: 14),
+              const SizedBox(height: AppSpacing.lg),
 
-                AuthTextField(
-                  controller: dressCodeController,
-                  label: 'Dress Code Optional',
-                  icon: Icons.checkroom_outlined,
-                ),
+              AppTextField(
+                controller: dressCodeController,
+                label: 'Dress Code Optional',
+                prefixIcon: Icons.checkroom_outlined,
+              ),
 
-                const SizedBox(height: 28),
+              const SizedBox(height: AppSpacing.xl),
 
-                SizedBox(
-                  width: double.infinity,
-                  height: 52,
-                  child: ElevatedButton(
-                    onPressed: eventProvider.isLoading
-                        ? null
-                        : handleSubmitEvent,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primaryBlue,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                    ),
-                    child: eventProvider.isLoading
-                        ? const CircularProgressIndicator(color: Colors.white)
-                        : Text(
-                            isEditMode ? 'Update Event' : 'Create Event',
-                            style: const TextStyle(color: Colors.white),
-                          ),
-                  ),
-                ),
+              PrimaryButton(
+                text: isEditMode ? 'Update Event' : 'Create Event',
+                icon: isEditMode ? Icons.save_outlined : Icons.add,
+                isLoading: eventProvider.isLoading,
+                onPressed: handleSubmitEvent,
+              ),
 
-                const SizedBox(height: 30),
-              ],
-            ),
+              const SizedBox(height: AppSpacing.xxl),
+            ],
           ),
         ),
       ),

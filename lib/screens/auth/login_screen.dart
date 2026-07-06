@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_routes.dart';
 import '../../providers/auth_provider.dart';
-import '../../widgets/auth_text_field.dart';
+import '../../theme/app_colors.dart';
+import '../../theme/app_spacing.dart';
+import '../../theme/app_text_styles.dart';
+import '../../widgets/app_card.dart';
+import '../../widgets/app_textfield.dart';
+import '../../widgets/primary_button.dart';
+import '../../widgets/responsive_page.dart';
 import '../app_shell.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -55,109 +60,116 @@ class _LoginScreenState extends State<LoginScreen> {
     final authProvider = Provider.of<AuthProvider>(context);
 
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(22),
-          child: Form(
-            key: formKey,
-            child: Column(
-              children: [
-                const SizedBox(height: 60),
-                const Text(
-                  'EventHub',
-                  style: TextStyle(
-                    color: AppColors.lightBlue,
-                    fontSize: 34,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  'Login',
-                  style: TextStyle(
-                    color: AppColors.textWhite,
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                const Text(
-                  'Welcome back! Login to your account.',
-                  style: TextStyle(color: AppColors.textGrey),
-                ),
-                const SizedBox(height: 34),
+      body: ResponsivePage(
+        centerContent: true,
+        child: Form(
+          key: formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.event_available_rounded,
+                color: AppColors.primary,
+                size: 58,
+              ),
+              const SizedBox(height: AppSpacing.sm),
 
-                AuthTextField(
-                  controller: emailController,
-                  label: 'Email',
-                  icon: Icons.email_outlined,
-                  keyboardType: TextInputType.emailAddress,
-                  validator: (value) => value == null || value.isEmpty
-                      ? 'Email is required'
-                      : null,
+              Text(
+                'EventHub',
+                style: AppTextStyles.headingLarge.copyWith(
+                  color: AppColors.primary,
                 ),
+              ),
 
-                const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.sm),
 
-                AuthTextField(
-                  controller: passwordController,
-                  label: 'Password',
-                  icon: Icons.lock_outline,
-                  isPassword: true,
-                  validator: (value) => value == null || value.isEmpty
-                      ? 'Password is required'
-                      : null,
-                ),
+              Text('Login', style: AppTextStyles.headingMedium),
 
-                const SizedBox(height: 24),
+              const SizedBox(height: AppSpacing.xs),
 
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () {
-                      Navigator.pushNamed(context, AppRoutes.forgotPassword);
-                    },
-                    child: const Text(
-                      'Forgot Password?',
-                      style: TextStyle(color: AppColors.lightBlue),
+              Text(
+                'Welcome back! Manage your events with ease.',
+                textAlign: TextAlign.center,
+                style: AppTextStyles.bodyMedium,
+              ),
+
+              const SizedBox(height: AppSpacing.xl),
+
+              AppCard(
+                child: Column(
+                  children: [
+                    AppTextField(
+                      controller: emailController,
+                      label: 'Email',
+                      prefixIcon: Icons.email_outlined,
+                      keyboardType: TextInputType.emailAddress,
+                      validator: (value) => value == null || value.isEmpty
+                          ? 'Email is required'
+                          : null,
                     ),
-                  ),
-                ),
 
-                SizedBox(
-                  width: double.infinity,
-                  height: 52,
-                  child: ElevatedButton(
-                    onPressed: authProvider.isLoading ? null : handleLogin,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primaryBlue,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
+                    const SizedBox(height: AppSpacing.lg),
+
+                    AppTextField(
+                      controller: passwordController,
+                      label: 'Password',
+                      prefixIcon: Icons.lock_outline,
+                      obscureText: true,
+                      validator: (value) => value == null || value.isEmpty
+                          ? 'Password is required'
+                          : null,
+                    ),
+
+                    const SizedBox(height: AppSpacing.sm),
+
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: () {
+                          Navigator.pushNamed(
+                            context,
+                            AppRoutes.forgotPassword,
+                          );
+                        },
+                        child: Text(
+                          'Forgot Password?',
+                          style: AppTextStyles.bodyMedium.copyWith(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
                       ),
                     ),
-                    child: authProvider.isLoading
-                        ? const CircularProgressIndicator(color: Colors.white)
-                        : const Text(
-                            'Login',
-                            style: TextStyle(color: Colors.white),
-                          ),
+
+                    const SizedBox(height: AppSpacing.lg),
+
+                    PrimaryButton(
+                      text: 'Login',
+                      icon: Icons.login_outlined,
+                      isLoading: authProvider.isLoading,
+                      onPressed: handleLogin,
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: AppSpacing.lg),
+
+              TextButton(
+                onPressed: () {
+                  Navigator.pushNamed(context, AppRoutes.signup);
+                },
+                child: Text(
+                  "Don’t have an account? Sign Up",
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
-
-                const SizedBox(height: 18),
-
-                TextButton(
-                  onPressed: () {
-                    Navigator.pushNamed(context, AppRoutes.signup);
-                  },
-                  child: const Text(
-                    "Don’t have an account? Sign Up",
-                    style: TextStyle(color: AppColors.lightBlue),
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

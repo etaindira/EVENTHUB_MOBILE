@@ -21,6 +21,7 @@ import 'screens/auth/forgot_password_screen.dart';
 import 'screens/auth/reset_password_screen.dart';
 import 'screens/rsvp/public_rsvp_screen.dart';
 import 'screens/invitations/public_invitation_screen.dart';
+import 'services/socket_service.dart';
 
 void main() {
   runApp(const EventHubApp());
@@ -43,6 +44,10 @@ class EventHubApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ProfileProvider()),
         ChangeNotifierProvider(create: (_) => DashboardProvider()),
         ChangeNotifierProvider(create: (_) => PublicRsvpProvider()),
+        Provider<SocketService>(
+          create: (_) => SocketService(),
+          dispose: (_, socketService) => socketService.disconnect(),
+        ),
       ],
       child: MaterialApp(
         title: 'EventHub',

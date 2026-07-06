@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../core/constants/app_colors.dart';
 import '../../providers/payment_provider.dart';
+import '../../theme/app_colors.dart';
+import '../../theme/app_spacing.dart';
+import '../../theme/app_text_styles.dart';
+import '../../widgets/app_card.dart';
+import '../../widgets/primary_button.dart';
 
 class PaymentsScreen extends StatefulWidget {
   const PaymentsScreen({super.key});
@@ -89,22 +93,17 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
     ).showSnackBar(SnackBar(content: Text(message)));
   }
 
-  Widget buildInfoRow(String label, String value) {
+  Widget buildInfoRow(String label, String value, {bool highlighted = false}) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.only(bottom: AppSpacing.md),
       child: Row(
         children: [
-          Expanded(
-            child: Text(
-              label,
-              style: const TextStyle(color: AppColors.textGrey),
-            ),
-          ),
+          Expanded(child: Text(label, style: AppTextStyles.bodyMedium)),
           Text(
             value,
-            style: const TextStyle(
-              color: AppColors.textWhite,
-              fontWeight: FontWeight.bold,
+            style: AppTextStyles.bodyLarge.copyWith(
+              fontWeight: FontWeight.w800,
+              color: highlighted ? AppColors.primary : AppColors.textPrimary,
             ),
           ),
         ],
@@ -117,32 +116,101 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
     required dynamic value,
     required List<DropdownMenuItem<dynamic>> items,
     required void Function(dynamic) onChanged,
+    IconData? icon,
   }) {
     return DropdownButtonFormField<dynamic>(
       value: value,
-      dropdownColor: AppColors.surface,
-      style: const TextStyle(color: AppColors.textWhite),
-      iconEnabledColor: AppColors.textGrey,
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: const TextStyle(color: AppColors.textGrey),
-        filled: true,
-        fillColor: AppColors.inputFill,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: AppColors.borderGrey),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: AppColors.borderGrey),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: AppColors.lightBlue),
-        ),
+        prefixIcon: icon == null ? null : Icon(icon),
       ),
       items: items,
       onChanged: onChanged,
+    );
+  }
+
+  Widget emptyPaymentCard() {
+    return AppCard(
+      child: Column(
+        children: [
+          const Icon(
+            Icons.payments_outlined,
+            color: AppColors.primary,
+            size: 48,
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          Text('No payment summary yet', style: AppTextStyles.headingSmall),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            'Select an event and calculate payment to see the invitation cost.',
+            textAlign: TextAlign.center,
+            style: AppTextStyles.bodyMedium,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget paymentSummaryCard(Map<String, dynamic> calculation) {
+    return AppCard(
+      padding: const EdgeInsets.all(AppSpacing.xl),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Payment Summary', style: AppTextStyles.headingSmall),
+          const SizedBox(height: AppSpacing.lg),
+
+          buildInfoRow(
+            'Invitation Template',
+            calculation['invitationTemplate'].toString(),
+          ),
+          buildInfoRow(
+            'Template Cost',
+            '${calculation['unitPrice']} ${calculation['currency']}',
+          ),
+          buildInfoRow('Guest Count', calculation['guestCount'].toString()),
+          buildInfoRow(
+            'Price Per Guest',
+            '${calculation['unitPrice']} ${calculation['currency']}',
+          ),
+
+          const Divider(height: 28),
+
+          buildInfoRow(
+            'Total Amount',
+            '${calculation['totalAmount']} ${calculation['currency']}',
+            highlighted: true,
+          ),
+
+          const SizedBox(height: AppSpacing.lg),
+
+          buildDropdown(
+            label: 'Payment Method',
+            value: selectedPaymentMethod,
+            icon: Icons.account_balance_wallet_outlined,
+            items: paymentMethods.map((method) {
+              return DropdownMenuItem<dynamic>(
+                value: method,
+                child: Text(method),
+              );
+            }).toList(),
+            onChanged: (value) {
+              setState(() {
+                selectedPaymentMethod = value;
+              });
+            },
+          ),
+
+          const SizedBox(height: AppSpacing.xl),
+
+          PrimaryButton(
+            text: 'Confirm Payment',
+            icon: Icons.verified_outlined,
+            isLoading: Provider.of<PaymentProvider>(context).isLoading,
+            onPressed: handleConfirmPayment,
+          ),
+        ],
+      ),
     );
   }
 
@@ -153,178 +221,73 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: RefreshIndicator(
-          onRefresh: paymentProvider.fetchPaymentEvents,
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(22),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Payments',
-                  style: TextStyle(
-                    color: AppColors.textWhite,
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
+      body: RefreshIndicator(
+        color: AppColors.primary,
+        onRefresh: paymentProvider.fetchPaymentEvents,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(AppSpacing.xl),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Payments', style: AppTextStyles.headingLarge),
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                'Calculate invitation costs and confirm payment.',
+                style: AppTextStyles.bodyMedium,
+              ),
+              const SizedBox(height: AppSpacing.xl),
+
+              if (paymentProvider.isLoading &&
+                  paymentProvider.paymentEvents.isEmpty)
+                const Center(
+                  child: Padding(
+                    padding: EdgeInsets.only(top: 80),
+                    child: CircularProgressIndicator(color: AppColors.primary),
                   ),
-                ),
-
-                const SizedBox(height: 6),
-
-                const Text(
-                  'Select an event, calculate invitation cost, and confirm payment.',
-                  style: TextStyle(color: AppColors.textGrey),
-                ),
-
-                const SizedBox(height: 24),
-
-                if (paymentProvider.isLoading &&
-                    paymentProvider.paymentEvents.isEmpty)
-                  const Center(child: CircularProgressIndicator())
-                else
-                  buildDropdown(
-                    label: 'Select Event',
-                    value: selectedEvent,
-                    items: paymentProvider.paymentEvents.map((event) {
-                      return DropdownMenuItem<dynamic>(
-                        value: event,
-                        child: Text(
-                          event['title'] ?? 'Untitled Event',
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        selectedEvent = value;
-                      });
-
-                      paymentProvider.clearCalculation();
-                    },
-                  ),
-
-                const SizedBox(height: 18),
-
-                SizedBox(
-                  width: double.infinity,
-                  height: 52,
-                  child: ElevatedButton.icon(
-                    onPressed: paymentProvider.isLoading
-                        ? null
-                        : handleCalculatePayment,
-                    icon: const Icon(Icons.calculate, color: Colors.white),
-                    label: const Text(
-                      'Calculate Payment',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primaryBlue,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
+                )
+              else ...[
+                buildDropdown(
+                  label: 'Select Event',
+                  value: selectedEvent,
+                  icon: Icons.event_available_outlined,
+                  items: paymentProvider.paymentEvents.map((event) {
+                    return DropdownMenuItem<dynamic>(
+                      value: event,
+                      child: Text(
+                        event['title'] ?? 'Untitled Event',
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                  ),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      selectedEvent = value;
+                    });
+
+                    paymentProvider.clearCalculation();
+                  },
                 ),
 
-                const SizedBox(height: 24),
+                const SizedBox(height: AppSpacing.lg),
+
+                PrimaryButton(
+                  text: 'Calculate Payment',
+                  icon: Icons.calculate_outlined,
+                  isLoading: paymentProvider.isLoading,
+                  onPressed: handleCalculatePayment,
+                ),
+
+                const SizedBox(height: AppSpacing.xl),
 
                 if (calculation != null)
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(18),
-                    decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(18),
-                      border: Border.all(color: AppColors.borderGrey),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Payment Summary',
-                          style: TextStyle(
-                            color: AppColors.textWhite,
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-
-                        const SizedBox(height: 16),
-
-                        buildInfoRow(
-                          'Invitation Template',
-                          calculation['invitationTemplate'].toString(),
-                        ),
-
-                        buildInfoRow(
-                          'Template Cost',
-                          '${calculation['unitPrice']} ${calculation['currency']}',
-                        ),
-
-                        buildInfoRow(
-                          'Guest Count',
-                          calculation['guestCount'].toString(),
-                        ),
-
-                        buildInfoRow(
-                          'Price Per Guest',
-                          '${calculation['unitPrice']} ${calculation['currency']}',
-                        ),
-
-                        buildInfoRow(
-                          'Total Amount',
-                          '${calculation['totalAmount']} ${calculation['currency']}',
-                        ),
-                        const SizedBox(height: 18),
-
-                        buildDropdown(
-                          label: 'Payment Method',
-                          value: selectedPaymentMethod,
-                          items: paymentMethods.map((method) {
-                            return DropdownMenuItem<dynamic>(
-                              value: method,
-                              child: Text(method),
-                            );
-                          }).toList(),
-                          onChanged: (value) {
-                            setState(() {
-                              selectedPaymentMethod = value;
-                            });
-                          },
-                        ),
-
-                        const SizedBox(height: 18),
-
-                        SizedBox(
-                          width: double.infinity,
-                          height: 52,
-                          child: ElevatedButton.icon(
-                            onPressed: paymentProvider.isLoading
-                                ? null
-                                : handleConfirmPayment,
-                            icon: const Icon(
-                              Icons.verified,
-                              color: Colors.white,
-                            ),
-                            label: const Text(
-                              'Confirm Payment',
-                              style: TextStyle(color: Colors.white),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(14),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                  paymentSummaryCard(calculation)
+                else
+                  emptyPaymentCard(),
               ],
-            ),
+
+              const SizedBox(height: AppSpacing.xxl),
+            ],
           ),
         ),
       ),

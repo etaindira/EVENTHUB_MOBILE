@@ -4,16 +4,19 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
-import '../../core/constants/app_colors.dart';
+import '../../core/constants/api_constants.dart';
 import '../../core/constants/app_routes.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/profile_provider.dart';
-import '../../core/constants/api_constants.dart';
+import '../../theme/app_colors.dart';
+import '../../theme/app_spacing.dart';
+import '../../theme/app_text_styles.dart';
+import '../../widgets/app_card.dart';
 
-import 'update_profile_info_screen.dart';
-import 'update_phone_screen.dart';
-import 'update_password_screen.dart';
 import 'manage_storage_screen.dart';
+import 'update_password_screen.dart';
+import 'update_phone_screen.dart';
+import 'update_profile_info_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -43,7 +46,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
 
     if (pickedFile == null) return;
-
     if (!mounted) return;
 
     final profileProvider = Provider.of<ProfileProvider>(
@@ -107,28 +109,40 @@ class _ProfileScreenState extends State<ProfileScreen> {
     required String subtitle,
     required VoidCallback onTap,
   }) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 14),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.borderGrey),
-      ),
-      child: ListTile(
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+      child: AppCard(
         onTap: onTap,
-        leading: Icon(icon, color: AppColors.lightBlue),
-        title: Text(
-          title,
-          style: const TextStyle(
-            color: AppColors.textWhite,
-            fontWeight: FontWeight.bold,
-          ),
+        child: Row(
+          children: [
+            Container(
+              width: 46,
+              height: 46,
+              decoration: BoxDecoration(
+                color: AppColors.primaryLight,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Icon(icon, color: AppColors.primary),
+            ),
+            const SizedBox(width: AppSpacing.lg),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: AppTextStyles.bodyLarge),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    subtitle,
+                    style: AppTextStyles.bodySmall,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right, color: AppColors.textMuted),
+          ],
         ),
-        subtitle: Text(
-          subtitle,
-          style: const TextStyle(color: AppColors.textGrey),
-        ),
-        trailing: const Icon(Icons.chevron_right, color: AppColors.textGrey),
       ),
     );
   }
@@ -146,208 +160,194 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: profileProvider.isLoading && profile == null
-            ? const Center(child: CircularProgressIndicator())
-            : RefreshIndicator(
-                onRefresh: profileProvider.fetchProfile,
-                child: SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.all(22),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      const Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          'Profile',
-                          style: TextStyle(
-                            color: AppColors.textWhite,
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
+      body: profileProvider.isLoading && profile == null
+          ? const Center(
+              child: CircularProgressIndicator(color: AppColors.primary),
+            )
+          : RefreshIndicator(
+              color: AppColors.primary,
+              onRefresh: profileProvider.fetchProfile,
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(AppSpacing.xl),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Profile', style: AppTextStyles.headingLarge),
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      'Manage your account and preferences.',
+                      style: AppTextStyles.bodyMedium,
+                    ),
+                    const SizedBox(height: AppSpacing.xl),
 
-                      const SizedBox(height: 28),
-
-                      Stack(
+                    AppCard(
+                      padding: const EdgeInsets.all(AppSpacing.xl),
+                      child: Column(
                         children: [
-                          CircleAvatar(
-                            radius: 58,
-                            backgroundColor: AppColors.surface,
-                            backgroundImage: imageUrl != null
-                                ? NetworkImage(imageUrl)
-                                : null,
-                            child: imageUrl == null
-                                ? const Icon(
-                                    Icons.person,
-                                    color: AppColors.lightBlue,
-                                    size: 60,
-                                  )
-                                : null,
-                          ),
-
-                          Positioned(
-                            right: 0,
-                            bottom: 0,
-                            child: GestureDetector(
-                              onTap: pickProfileImage,
-                              child: Container(
-                                width: 38,
-                                height: 38,
-                                decoration: BoxDecoration(
-                                  color: AppColors.primaryBlue,
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: AppColors.background,
-                                    width: 3,
+                          Stack(
+                            children: [
+                              CircleAvatar(
+                                radius: 58,
+                                backgroundColor: AppColors.primaryLight,
+                                backgroundImage: imageUrl != null
+                                    ? NetworkImage(imageUrl)
+                                    : null,
+                                child: imageUrl == null
+                                    ? const Icon(
+                                        Icons.person,
+                                        color: AppColors.primary,
+                                        size: 60,
+                                      )
+                                    : null,
+                              ),
+                              Positioned(
+                                right: 0,
+                                bottom: 0,
+                                child: GestureDetector(
+                                  onTap: pickProfileImage,
+                                  child: Container(
+                                    width: 38,
+                                    height: 38,
+                                    decoration: BoxDecoration(
+                                      color: AppColors.primary,
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: AppColors.surface,
+                                        width: 3,
+                                      ),
+                                    ),
+                                    child: const Icon(
+                                      Icons.add,
+                                      color: Colors.white,
+                                      size: 22,
+                                    ),
                                   ),
                                 ),
-                                child: const Icon(
-                                  Icons.add,
-                                  color: Colors.white,
-                                  size: 22,
-                                ),
+                              ),
+                            ],
+                          ),
+
+                          if (imageUrl != null) ...[
+                            const SizedBox(height: AppSpacing.sm),
+                            TextButton.icon(
+                              onPressed: deleteProfileImage,
+                              icon: const Icon(
+                                Icons.delete_outline,
+                                color: AppColors.error,
+                              ),
+                              label: const Text(
+                                'Delete Profile Picture',
+                                style: TextStyle(color: AppColors.error),
                               ),
                             ),
+                          ],
+
+                          const SizedBox(height: AppSpacing.lg),
+
+                          Text(
+                            '${profile?.firstName ?? ''} ${profile?.lastName ?? ''}',
+                            style: AppTextStyles.headingMedium,
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: AppSpacing.xs),
+                          Text(
+                            profile?.email ?? '',
+                            style: AppTextStyles.bodyMedium,
+                            textAlign: TextAlign.center,
                           ),
                         ],
                       ),
+                    ),
 
-                      if (imageUrl != null) ...[
-                        const SizedBox(height: 8),
-                        TextButton.icon(
-                          onPressed: deleteProfileImage,
-                          icon: const Icon(
-                            Icons.delete_outline,
-                            color: Colors.redAccent,
+                    const SizedBox(height: AppSpacing.xl),
+
+                    Text('Settings', style: AppTextStyles.headingSmall),
+                    const SizedBox(height: AppSpacing.lg),
+
+                    settingTile(
+                      icon: Icons.person_outline,
+                      title: 'Update Profile Info',
+                      subtitle: 'Change your name and email',
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const UpdateProfileInfoScreen(),
                           ),
-                          label: const Text(
-                            'Delete Profile Picture',
-                            style: TextStyle(color: Colors.redAccent),
+                        );
+                      },
+                    ),
+
+                    settingTile(
+                      icon: Icons.phone_outlined,
+                      title: 'Update Phone Number',
+                      subtitle: profile?.phone ?? 'No phone number',
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const UpdatePhoneScreen(),
                           ),
-                        ),
-                      ],
+                        );
+                      },
+                    ),
 
-                      const SizedBox(height: 16),
-
-                      Text(
-                        '${profile?.firstName ?? ''} ${profile?.lastName ?? ''}',
-                        style: const TextStyle(
-                          color: AppColors.textWhite,
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-
-                      const SizedBox(height: 6),
-
-                      Text(
-                        profile?.email ?? '',
-                        style: const TextStyle(
-                          color: AppColors.textGrey,
-                          fontSize: 15,
-                        ),
-                      ),
-
-                      const SizedBox(height: 34),
-
-                      const Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          'Settings',
-                          style: TextStyle(
-                            color: AppColors.textWhite,
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
+                    settingTile(
+                      icon: Icons.lock_outline,
+                      title: 'Update Password',
+                      subtitle: 'Change your account password',
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const UpdatePasswordScreen(),
                           ),
-                        ),
-                      ),
+                        );
+                      },
+                    ),
 
-                      const SizedBox(height: 16),
-
-                      settingTile(
-                        icon: Icons.person_outline,
-                        title: 'Update Profile Info',
-                        subtitle: 'Change your name and email',
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const UpdateProfileInfoScreen(),
-                            ),
-                          );
-                        },
-                      ),
-
-                      settingTile(
-                        icon: Icons.phone_outlined,
-                        title: 'Update Phone Number',
-                        subtitle: profile?.phone ?? 'No phone number',
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const UpdatePhoneScreen(),
-                            ),
-                          );
-                        },
-                      ),
-
-                      settingTile(
-                        icon: Icons.lock_outline,
-                        title: 'Update Password',
-                        subtitle: 'Change your account password',
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const UpdatePasswordScreen(),
-                            ),
-                          );
-                        },
-                      ),
-
-                      settingTile(
-                        icon: Icons.storage_outlined,
-                        title: 'Manage Storage',
-                        subtitle: 'View app storage and clear cache',
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const ManageStorageScreen(),
-                            ),
-                          );
-                        },
-                      ),
-
-                      const SizedBox(height: 20),
-
-                      SizedBox(
-                        width: double.infinity,
-                        height: 52,
-                        child: ElevatedButton.icon(
-                          onPressed: handleLogout,
-                          icon: const Icon(Icons.logout, color: Colors.white),
-                          label: const Text(
-                            'Logout',
-                            style: TextStyle(color: Colors.white),
+                    settingTile(
+                      icon: Icons.storage_outlined,
+                      title: 'Manage Storage',
+                      subtitle: 'View app storage and clear cache',
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const ManageStorageScreen(),
                           ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.redAccent,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
-                            ),
+                        );
+                      },
+                    ),
+
+                    const SizedBox(height: AppSpacing.md),
+
+                    SizedBox(
+                      width: double.infinity,
+                      height: 54,
+                      child: ElevatedButton.icon(
+                        onPressed: handleLogout,
+                        icon: const Icon(Icons.logout, color: Colors.white),
+                        label: const Text(
+                          'Logout',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.error,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18),
                           ),
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+
+                    const SizedBox(height: AppSpacing.xxl),
+                  ],
                 ),
               ),
-      ),
+            ),
     );
   }
 }

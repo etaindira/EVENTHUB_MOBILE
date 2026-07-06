@@ -13,6 +13,7 @@ class EventModel {
   final String rsvpDeadline;
   final String? dressCode;
   final String? status;
+  final String? scannerCode;
 
   EventModel({
     required this.id,
@@ -29,6 +30,7 @@ class EventModel {
     required this.rsvpDeadline,
     this.dressCode,
     this.status,
+    this.scannerCode,
   });
 
   factory EventModel.fromJson(Map<String, dynamic> json) {
@@ -47,6 +49,7 @@ class EventModel {
       rsvpDeadline: json['rsvp_deadline'] ?? '',
       dressCode: json['dress_code'],
       status: json['status'],
+      scannerCode: json['scanner_code'],
     );
   }
 }
