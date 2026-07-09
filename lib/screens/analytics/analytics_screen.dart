@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../models/dashboard_model.dart';
 import '../../providers/dashboard_provider.dart';
+import '../../services/socket_service.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_text_styles.dart';
@@ -19,27 +20,25 @@ class AnalyticsScreen extends StatefulWidget {
 
 class _AnalyticsScreenState extends State<AnalyticsScreen> {
   late DashboardProvider _dashboardProvider;
+  late SocketService _socketService;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+
     _dashboardProvider = Provider.of<DashboardProvider>(context, listen: false);
+
+    _socketService = Provider.of<SocketService>(context, listen: false);
   }
 
   @override
   void initState() {
     super.initState();
 
-    Future.microtask(() {
-      _dashboardProvider.fetchDashboardEvents();
-      _dashboardProvider.startAutoRefresh();
+    Future.microtask(() async {
+      _dashboardProvider.initializeSocket(_socketService);
+      await _dashboardProvider.fetchDashboardEvents();
     });
-  }
-
-  @override
-  void dispose() {
-    _dashboardProvider.stopAutoRefresh();
-    super.dispose();
   }
 
   String _formatValue(dynamic value) {
@@ -91,7 +90,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         if (eventId == null) return;
 
         final selectedEvent = events.firstWhere((event) => event.id == eventId);
-
         provider.selectEvent(selectedEvent);
       },
     );

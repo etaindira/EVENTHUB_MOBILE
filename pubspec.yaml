@@ -13,18 +13,34 @@ dependencies:
     sdk: flutter
 
   cupertino_icons: ^1.0.8
+
+  # Networking
   dio: ^5.9.2
+
+  # State Management
   provider: ^6.1.5+1
+
+  # Secure Storage
   flutter_secure_storage: ^10.3.0
+
+  # Images
   image_picker: ^1.2.1
+
+  # Fonts
   google_fonts: ^6.3.2
 
-  # Location packages
+  # Date Formatting
+  intl: ^0.20.2
+
+  # Location
   geolocator: ^13.0.2
   geocoding: ^3.0.0
 
-  # Realtime updates
+  # Realtime Updates
   socket_io_client: ^3.0.2
+
+  # Navigation
+  go_router: ^17.0.0
 
 dev_dependencies:
   flutter_test:
@@ -33,7 +49,6 @@ dev_dependencies:
   flutter_lints: ^5.0.0
 
 flutter:
-
   uses-material-design: true
 
   assets:

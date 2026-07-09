@@ -1,12 +1,13 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 
 import '../models/dashboard_model.dart';
 import '../repositories/dashboard_repository.dart';
+import '../services/socket_service.dart';
 
 class DashboardProvider extends ChangeNotifier {
   final DashboardRepository _dashboardRepository = DashboardRepository();
+
+  SocketService? _socketService;
 
   List<DashboardEventModel> _events = [];
   DashboardEventModel? _selectedEvent;
@@ -16,7 +17,6 @@ class DashboardProvider extends ChangeNotifier {
 
   bool _isLoading = false;
   String? _errorMessage;
-  Timer? _refreshTimer;
 
   List<DashboardEventModel> get events => _events;
   DashboardEventModel? get selectedEvent => _selectedEvent;
@@ -26,6 +26,32 @@ class DashboardProvider extends ChangeNotifier {
 
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
+
+  void initializeSocket(SocketService socketService) {
+    _socketService = socketService;
+
+    _socketService!.connect();
+
+    _socketService!.listenToRsvpUpdates((data) {
+      debugPrint("Analytics RSVP update: $data");
+      refreshSelectedEvent();
+    });
+
+    _socketService!.listenToInvitationStatusUpdates((data) {
+      debugPrint("Analytics invitation update: $data");
+      refreshSelectedEvent();
+      fetchDashboardSummary();
+    });
+
+    _socketService!.listenToCheckInUpdates((data) {
+      debugPrint("Analytics check-in update: $data");
+      refreshSelectedEvent();
+    });
+
+    if (_selectedEvent != null) {
+      _socketService!.joinEventRoom(_selectedEvent!.id);
+    }
+  }
 
   Future<void> fetchDashboardEvents() async {
     try {
@@ -38,6 +64,7 @@ class DashboardProvider extends ChangeNotifier {
 
       if (_events.isNotEmpty && _selectedEvent == null) {
         _selectedEvent = _events.first;
+        _socketService?.joinEventRoom(_selectedEvent!.id);
         await fetchEventAnalytics(_selectedEvent!.id);
       }
 
@@ -50,8 +77,26 @@ class DashboardProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> fetchDashboardSummary() async {
+    try {
+      _summary = await _dashboardRepository.getDashboardSummary();
+      notifyListeners();
+    } catch (error) {
+      _errorMessage = error.toString();
+      notifyListeners();
+    }
+  }
+
   Future<void> selectEvent(DashboardEventModel event) async {
+    if (_selectedEvent != null) {
+      _socketService?.leaveEventRoom(_selectedEvent!.id);
+    }
+
     _selectedEvent = event;
+
+    _socketService?.connect();
+    _socketService?.joinEventRoom(event.id);
+
     notifyListeners();
 
     await fetchEventAnalytics(event.id);
@@ -71,24 +116,18 @@ class DashboardProvider extends ChangeNotifier {
     }
   }
 
-  void startAutoRefresh() {
-    _refreshTimer?.cancel();
+  Future<void> refreshSelectedEvent() async {
+    if (_selectedEvent == null) return;
 
-    _refreshTimer = Timer.periodic(const Duration(seconds: 5), (_) {
-      if (_selectedEvent != null) {
-        fetchEventAnalytics(_selectedEvent!.id);
-      }
-    });
-  }
-
-  void stopAutoRefresh() {
-    _refreshTimer?.cancel();
-    _refreshTimer = null;
+    await fetchEventAnalytics(_selectedEvent!.id);
   }
 
   @override
   void dispose() {
-    stopAutoRefresh();
+    if (_selectedEvent != null) {
+      _socketService?.leaveEventRoom(_selectedEvent!.id);
+    }
+
     super.dispose();
   }
 }

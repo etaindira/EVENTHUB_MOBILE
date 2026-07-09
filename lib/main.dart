@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 
 import 'core/constants/app_routes.dart';
 import 'theme/app_theme.dart';
@@ -20,7 +21,8 @@ import 'screens/auth/verification_screen.dart';
 import 'screens/auth/forgot_password_screen.dart';
 import 'screens/auth/reset_password_screen.dart';
 import 'screens/rsvp/public_rsvp_screen.dart';
-import 'screens/invitations/public_invitation_screen.dart';
+import 'screens/invitations/public_invitation_preview_screen.dart';
+
 import 'services/socket_service.dart';
 
 void main() {
@@ -29,6 +31,60 @@ void main() {
 
 class EventHubApp extends StatelessWidget {
   const EventHubApp({super.key});
+
+  static final GoRouter _router = GoRouter(
+    initialLocation: '/',
+    routes: [
+      GoRoute(path: '/', builder: (context, state) => const AuthGate()),
+
+      GoRoute(
+        path: AppRoutes.login,
+        builder: (context, state) => const LoginScreen(),
+      ),
+
+      GoRoute(
+        path: AppRoutes.signup,
+        builder: (context, state) => const SignupScreen(),
+      ),
+
+      GoRoute(
+        path: AppRoutes.verifyCode,
+        builder: (context, state) => const VerificationScreen(),
+      ),
+
+      GoRoute(
+        path: AppRoutes.forgotPassword,
+        builder: (context, state) => const ForgotPasswordScreen(),
+      ),
+
+      GoRoute(
+        path: AppRoutes.resetPassword,
+        builder: (context, state) => const ResetPasswordScreen(),
+      ),
+
+      GoRoute(
+        path: '/invitation-preview/:previewToken',
+        builder: (context, state) {
+          final previewToken = state.pathParameters['previewToken']!;
+          final guestToken = state.uri.queryParameters['guest'];
+
+          return PublicInvitationPreviewScreen(
+            previewToken: previewToken,
+            guestToken: guestToken,
+          );
+        },
+      ),
+
+      GoRoute(
+        path: '/rsvp/:token',
+        builder: (context, state) {
+          final token = state.pathParameters['token']!;
+
+          return PublicRsvpScreen(token: token);
+        },
+      ),
+    ],
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -49,43 +105,11 @@ class EventHubApp extends StatelessWidget {
           dispose: (_, socketService) => socketService.disconnect(),
         ),
       ],
-      child: MaterialApp(
+      child: MaterialApp.router(
         title: 'EventHub',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
-        home: const AuthGate(),
-        routes: {
-          AppRoutes.login: (context) => const LoginScreen(),
-          AppRoutes.signup: (context) => const SignupScreen(),
-          AppRoutes.verifyCode: (context) => const VerificationScreen(),
-          AppRoutes.forgotPassword: (context) => const ForgotPasswordScreen(),
-          AppRoutes.resetPassword: (context) => const ResetPasswordScreen(),
-        },
-        onGenerateRoute: (settings) {
-          final uri = Uri.parse(settings.name ?? '');
-
-          if (uri.pathSegments.length == 2 && uri.pathSegments[0] == 'invite') {
-            final previewToken = uri.pathSegments[1];
-            final guestToken = uri.queryParameters['guest'];
-
-            return MaterialPageRoute(
-              builder: (_) => PublicInvitationScreen(
-                previewToken: previewToken,
-                guestToken: guestToken,
-              ),
-            );
-          }
-
-          if (uri.pathSegments.length == 2 && uri.pathSegments[0] == 'rsvp') {
-            final token = uri.pathSegments[1];
-
-            return MaterialPageRoute(
-              builder: (_) => PublicRsvpScreen(token: token),
-            );
-          }
-
-          return null;
-        },
+        routerConfig: _router,
       ),
     );
   }

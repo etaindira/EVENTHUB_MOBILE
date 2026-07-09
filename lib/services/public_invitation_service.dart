@@ -1,11 +1,27 @@
 import 'package:dio/dio.dart';
-import '../core/network/api_client.dart';
+
+import '../models/public_invitation_model.dart';
 
 class PublicInvitationService {
-  final Dio _dio = ApiClient.dio;
+  final Dio _dio = Dio(
+    BaseOptions(
+      baseUrl: 'https://eventhub-backend-lgpa.onrender.com/api',
+      connectTimeout: const Duration(seconds: 30),
+      receiveTimeout: const Duration(seconds: 30),
+    ),
+  );
 
-  Future<Map<String, dynamic>> getPublicInvitation(String previewToken) async {
-    final response = await _dio.get('/invite/$previewToken');
-    return response.data;
+  Future<PublicInvitationResponse> getInvitationByToken({
+    required String previewToken,
+    String? guestToken,
+  }) async {
+    final response = await _dio.get(
+      '/invitations/public/$previewToken',
+      queryParameters: {
+        if (guestToken != null && guestToken.isNotEmpty) 'guest': guestToken,
+      },
+    );
+
+    return PublicInvitationResponse.fromJson(response.data);
   }
 }
